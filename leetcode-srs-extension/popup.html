@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeetCode Galaxy</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup">
+    <div class="header">
+      <img src="icon.png" alt="Logo" class="logo" />
+      <h1>LeetCode Galaxy</h1>
+    </div>
+
+    <div id="authSection" class="section">
+      <div id="authStatus" class="status">
+        <span class="status-dot offline"></span>
+        <span id="authText">Not signed in</span>
+      </div>
+      <button id="signInBtn" class="btn btn-primary">Sign in with Google</button>
+      <button id="signOutBtn" class="btn btn-secondary hidden">Sign out</button>
+    </div>
+
+    <div id="trackingSection" class="section hidden">
+      <div class="instructions">
+        <p class="inst-header">How to sync:</p>
+        <ol>
+          <li>Open <a href="https://leetcode.com" target="_blank">leetcode.com</a> and log in.</li>
+          <li>Select the sync date range below.</li>
+          <li>Click <strong>Sync History</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="date-inputs">
+        <div class="input-group">
+          <label for="startDateInput">Start Date</label>
+          <input type="date" id="startDateInput" />
+        </div>
+        <div class="input-group">
+          <label for="endDateInput">End Date</label>
+          <input type="date" id="endDateInput" />
+        </div>
+      </div>
+
+      <div class="info-row">
+        <span>Queue Status</span>
+        <span id="queueStatus" class="badge">0 pending</span>
+      </div>
+      <div class="info-row">
+        <span>Last Sync</span>
+        <span id="lastSync">Never</span>
+      </div>
+      <button id="syncBtn" class="btn btn-outline">Sync History</button>
+    </div>
+
+    <div id="progressSection" class="section hidden">
+      <p id="progressText" class="progress-text">Ready</p>
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+    </div>
+
+    <div id="errorBanner" class="banner banner-error hidden" role="alert"></div>
+
+    <div class="footer">
+      <a id="dashboardLink" href="#" target="_blank">Open Dashboard →</a>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
