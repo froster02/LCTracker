@@ -1,0 +1,99 @@
+import { apiPost } from "../shared/api-client.js";
+import { getAuth, getQueue, setAuth, setQueue } from "../shared/storage.js";
+import { validateSubmission } from "../shared/submission-shape.js";
+import { notify, ACTIONS } from "../shared/messaging.js";
+import {
+  ALARM_NAMES,
+  BASE_BACKOFF_MS,
+  MAX_BACKOFF_MS,
+  MAX_QUEUE_ATTEMPTS,
+  RETRY_ALARM_DELAY_MIN,
+} from "../config/constants.js";
+
+export function computeBackoffDelay(attempts) {
+  return Math.min(2 ** attempts * BASE_BACKOFF_MS, MAX_BACKOFF_MS);
+}
+
+export async function enqueueSubmission(payload) {
+  const problems = validateSubmission(payload);
+  if (problems.length > 0) {
+    console.warn("[LeetCode Galaxy] Rejected invalid submission payload:", problems, payload);
+    return;
+  }
+
+  const queue = await getQueue();
+  const item = {
+    id: crypto.randomUUID(),
+    payload,
+    attempts: 0,
+    lastAttempt: null,
+    createdAt: Date.now(),
+  };
+  queue.push(item);
+  await setQueue(queue);
+  console.log("[LeetCode Galaxy] Enqueued submission:", payload.problemName);
+
+  processQueue().catch(console.error);
+}
+
+export async function processQueue() {
+  const auth = await getAuth();
+  if (!auth.apiKey) {
+    console.log("[LeetCode Galaxy] No auth, skipping queue processing");
+    return;
+  }
+
+  let queue = await getQueue();
+  if (queue.length === 0) return;
+
+  const processedIds = [];
+
+  for (const item of queue) {
+    if (item.attempts >= MAX_QUEUE_ATTEMPTS) {
+      processedIds.push(item.id); // Drop permanently failed items
+      continue;
+    }
+
+    const minDelay = computeBackoffDelay(item.attempts);
+    if (item.lastAttempt && Date.now() - item.lastAttempt < minDelay) {
+      continue;
+    }
+
+    try {
+      const res = await apiPost("/api/submissions", item.payload, auth.apiKey);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.duplicate) {
+          console.log("[LeetCode Galaxy] Duplicate submission skipped:", item.payload.problemName);
+        } else {
+          console.log("[LeetCode Galaxy] Submission synced:", item.payload.problemName);
+        }
+        processedIds.push(item.id);
+      } else if (res.status === 401) {
+        console.warn("[LeetCode Galaxy] Auth expired during queue processing");
+        await setAuth({ apiKey: null, userId: null, expiresAt: null });
+        notify({ action: ACTIONS.AUTH_EXPIRED });
+        return; // Stop processing, will retry on next trigger
+      } else {
+        item.attempts++;
+        item.lastAttempt = Date.now();
+        console.warn("[LeetCode Galaxy] Submission failed, will retry:", res.status, item.payload.problemName);
+      }
+    } catch (error) {
+      item.attempts++;
+      item.lastAttempt = Date.now();
+      console.warn("[LeetCode Galaxy] Network error, will retry:", item.payload.problemName, error);
+    }
+  }
+
+  if (processedIds.length > 0) {
+    queue = queue.filter((q) => !processedIds.includes(q.id));
+    await setQueue(queue);
+  }
+
+  const remaining = await getQueue();
+  if (remaining.length > 0) {
+    chrome.alarms.create(ALARM_NAMES.PROCESS_QUEUE, { delayInMinutes: RETRY_ALARM_DELAY_MIN });
+  }
+}
