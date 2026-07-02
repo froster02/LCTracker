@@ -6,6 +6,9 @@ export function sendSubmission(details) {
   markProcessing();
 
   chrome.runtime.sendMessage({ action: ACTIONS.SUBMISSION_CAPTURED, payload: details }, () => {
+    if (chrome.runtime.lastError) {
+      console.warn("[LeetCode Galaxy] Background unavailable:", chrome.runtime.lastError.message);
+    }
     markProcessed();
   });
 }

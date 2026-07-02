@@ -26,6 +26,7 @@ const buildOptions = {
   entryPoints: {
     background: path.join(ROOT, "src/background/index.js"),
     content: path.join(ROOT, "src/content/index.js"),
+    "content-main": path.join(ROOT, "src/content/main-world.js"),
     popup: path.join(ROOT, "src/popup/index.js"),
   },
   bundle: true,

@@ -1,7 +1,14 @@
+// Isolated-world half of submission interception. The MAIN-world script
+// (main-world.js) wraps the page's fetch and relays LeetCode GraphQL
+// submission responses here via window.postMessage; this listener normalizes
+// them and hands off to the background worker.
+
 import { extractProblemInfo, getLanguageFromEditor } from "./problem-extractor.js";
 import { normalizeStatus } from "../shared/status-map.js";
 import { setDetectedSubmission } from "./submission-state.js";
 import { sendSubmission } from "./submission-sender.js";
+
+const BRIDGE_SOURCE = "lcg-interceptor";
 
 function handleSubmissionResponse(data) {
   if (!data?.data) return;
@@ -45,33 +52,11 @@ function handleSubmissionResponse(data) {
   }
 }
 
-export function installFetchInterceptor() {
-  if (window.fetch.__lcgIntercepted) return;
-
-  const originalFetch = window.fetch;
-  window.fetch = async function (...args) {
-    const [url, init] = args;
-    const urlStr = typeof url === "string" ? url : url.toString();
-
-    if (urlStr.includes("leetcode.com") && urlStr.includes("/graphql/")) {
-      const body = init?.body?.toString() ?? "";
-      if (body.includes("submit") || body.includes("checkSubmission")) {
-        try {
-          const response = await originalFetch.apply(this, args);
-          const clone = response.clone();
-          clone.text().then((text) => {
-            try {
-              handleSubmissionResponse(JSON.parse(text));
-            } catch {}
-          }).catch(() => {});
-          return response;
-        } catch (e) {
-          return originalFetch.apply(this, args);
-        }
-      }
-    }
-
-    return originalFetch.apply(this, args);
-  };
-  window.fetch.__lcgIntercepted = true;
+export function installInterceptorBridge() {
+  window.addEventListener("message", (event) => {
+    if (event.source !== window) return;
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.source !== BRIDGE_SOURCE) return;
+    handleSubmissionResponse(event.data.data);
+  });
 }
