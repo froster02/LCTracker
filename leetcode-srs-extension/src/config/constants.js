@@ -2,11 +2,16 @@ export const STORAGE_KEYS = {
   AUTH: "auth",
   QUEUE: "queue",
   LAST_SYNC: "lastSync",
+  LAST_REVIEW_NOTIFY: "lastReviewNotify",
+  REVIEW_CLICK_URL: "reviewClickUrl",
 };
 
 export const ALARM_NAMES = {
   PROCESS_QUEUE: "processQueue",
+  REVIEW_REMINDER: "reviewReminder",
 };
+
+export const REVIEW_REMINDER_PERIOD_MIN = 1440; // daily
 
 export const DEV_BYPASS_CLIENT_ID_PLACEHOLDER = "YOUR_GOOGLE_CLIENT_ID";
 

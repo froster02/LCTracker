@@ -1,0 +1,138 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  googleId      String    @unique
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  submissions   Submission[]
+  stats         UserStat?
+  apiKeys       ApiKey[]
+  contestParticipations ContestParticipation[]
+  problemReviews ProblemReview[]
+
+  @@map("users")
+}
+
+model Submission {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  problemId     String    @map("problem_id")
+  problemName   String    @map("problem_name")
+  titleSlug     String    @map("title_slug")
+  difficulty    String
+  language      String
+  runtime       Int?      // ms
+  memory        Int?      // MB
+  status        String
+  codeLength    Int?      @map("code_length")
+  url           String
+  submittedAt   DateTime  @default(now()) @map("submitted_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, submittedAt])
+  @@index([userId, status])
+  @@index([submittedAt])
+  @@map("submissions")
+}
+
+// Spaced-repetition state: one row per (user, problem). stage = reviews
+// completed (0 -> due +7d, 1 -> +14d, 2 -> +21d); finishing the stage-2
+// review sets mastered and clears nextReviewAt.
+model ProblemReview {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  titleSlug     String    @map("title_slug")
+  problemId     String    @map("problem_id")
+  problemName   String    @map("problem_name")
+  difficulty    String
+  url           String
+  stage         Int       @default(0)
+  mastered      Boolean   @default(false)
+  firstSolvedAt DateTime  @map("first_solved_at")
+  lastSolvedAt  DateTime  @map("last_solved_at")
+  nextReviewAt  DateTime? @map("next_review_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, titleSlug])
+  @@index([userId, nextReviewAt])
+  @@index([userId, mastered])
+  @@map("problem_reviews")
+}
+
+model Problem {
+  id            String    @id @default(cuid())
+  problemId     String    @unique @map("problem_id")
+  title         String
+  titleSlug     String    @unique @map("title_slug")
+  difficulty    String
+  tags          String[]
+  totalAccepted Int       @default(0) @map("total_accepted")
+  totalSubmitted Int      @default(0) @map("total_submitted")
+
+  @@map("problems")
+}
+
+model UserStat {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  totalSolved     Int      @default(0) @map("total_solved")
+  easySolved      Int      @default(0) @map("easy_solved")
+  mediumSolved    Int      @default(0) @map("medium_solved")
+  hardSolved      Int      @default(0) @map("hard_solved")
+  currentStreak   Int      @default(0) @map("current_streak")
+  longestStreak   Int      @default(0) @map("longest_streak")
+  lastSubmissionDate DateTime? @map("last_submission_date")
+  acceptanceRate  Float    @default(0) @map("acceptance_rate")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  keyHash   String   @unique @map("key_hash")
+  name      String
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime? @map("expires_at")
+  revoked   Boolean  @default(false)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+  @@map("api_keys")
+}
+
+model ContestParticipation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  contestName String   @map("contest_name")
+  rank        Int?
+  score       Int?
+  problemsSolved Int?  @map("problems_solved")
+  rating      Int?
+  ratingDelta Int?     @map("rating_delta")
+  participatedAt DateTime @map("participated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("contest_participations")
+}
