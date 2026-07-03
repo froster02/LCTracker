@@ -1,52 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { StatsCards } from "@/components/StatsCards";
-import { CalendarHeatmap } from "@/components/CalendarHeatmap";
-import { DifficultyDonut } from "@/components/DifficultyDonut";
-import { LanguageChart } from "@/components/LanguageChart";
-import { StreakCard } from "@/components/StreakCard";
-import { RecentSubmissions } from "@/components/RecentSubmissions";
-import { PerformanceChart } from "@/components/PerformanceChart";
-import { SubmissionTrends } from "@/components/SubmissionTrends";
+import { OverviewPanel } from "@/components/OverviewPanel";
+import { HistoryTable } from "@/components/HistoryTable";
+import { ReviewsPanel } from "@/components/ReviewsPanel";
 import { useSession, signIn } from "next-auth/react";
 
-interface UserStats {
-  totalSolved: number;
-  easySolved: number;
-  mediumSolved: number;
-  hardSolved: number;
-  currentStreak: number;
-  longestStreak: number;
-  acceptanceRate: number;
-}
+const TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "reviews", label: "Reviews" },
+  { key: "history", label: "History" },
+] as const;
 
-interface StatsResponse {
-  stats: UserStats;
-  totalSubmissions: number;
-  acceptedSubmissions: number;
-  recentSubmissions: unknown[];
-}
+type TabKey = (typeof TABS)[number]["key"];
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [statsData, setStatsData] = useState<StatsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<TabKey>("overview");
+  const [visited, setVisited] = useState<Set<TabKey>>(new Set(["overview"]));
 
-  useEffect(() => {
-    if (!session?.user) return;
-    fetch("/api/stats")
-      .then((res) => {
-        if (res.status === 401) throw new Error("unauthorized");
-        return res.json();
-      })
-      .then((data) => {
-        setStatsData(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [session]);
+  const selectTab = (key: TabKey) => {
+    setTab(key);
+    setVisited((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+  };
 
   if (!session?.user) {
     return (
@@ -72,49 +49,36 @@ export default function DashboardPage() {
     <>
       <Navbar />
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Welcome back, {session.user.name?.split(" ")[0] ?? "Coder"}
           </p>
         </div>
 
-        {loading ? (
-          <p className="text-muted-foreground">Loading your analytics...</p>
-        ) : (
-          <div className="space-y-8">
-            <StatsCards
-              stats={statsData?.stats ?? null}
-              totalSubmissions={statsData?.totalSubmissions ?? 0}
-              acceptedSubmissions={statsData?.acceptedSubmissions ?? 0}
-            />
+        <div className="mb-8 flex gap-1 border-b" role="tablist">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => selectTab(t.key)}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <CalendarHeatmap />
-              </div>
-              <div>
-                <StreakCard />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <PerformanceChart />
-              </div>
-              <div>
-                <DifficultyDonut />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <LanguageChart />
-              <SubmissionTrends />
-            </div>
-
-            <RecentSubmissions />
-          </div>
-        )}
+        {/* Panels stay mounted once visited so switching tabs doesn't
+            re-fetch or lose scroll position — just toggled with `hidden`. */}
+        <div hidden={tab !== "overview"}>{visited.has("overview") && <OverviewPanel />}</div>
+        <div hidden={tab !== "reviews"}>{visited.has("reviews") && <ReviewsPanel />}</div>
+        <div hidden={tab !== "history"}>{visited.has("history") && <HistoryTable />}</div>
       </main>
     </>
   );

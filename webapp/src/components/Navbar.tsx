@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -17,16 +18,11 @@ export function Navbar() {
         </Link>
 
         {user ? (
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3">
             <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Dashboard
             </Link>
-            <Link href="/dashboard/reviews" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Reviews
-            </Link>
-            <Link href="/dashboard/history" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              History
-            </Link>
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger className="outline-none cursor-pointer">
                 <Avatar className="h-8 w-8">
@@ -45,9 +41,12 @@ export function Navbar() {
             </DropdownMenu>
           </div>
         ) : (
-          <Link href="/auth/signin" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Sign in
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/auth/signin" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Sign in
+            </Link>
+          </div>
         )}
       </div>
     </nav>

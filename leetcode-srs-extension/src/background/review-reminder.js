@@ -31,7 +31,7 @@ export async function checkDueReviews() {
 
   const titles = due.slice(0, MAX_TITLES_IN_MESSAGE).map((d) => d.problemName);
   const extra = count > MAX_TITLES_IN_MESSAGE ? ` +${count - MAX_TITLES_IN_MESSAGE} more` : "";
-  const clickUrl = count === 1 ? due[0].url : `${API_BASE}/dashboard/reviews`;
+  const clickUrl = count === 1 ? due[0].url : `${API_BASE}/dashboard`;
 
   await chrome.storage.local.set({
     [STORAGE_KEYS.REVIEW_CLICK_URL]: clickUrl,
