@@ -1,4 +1,5 @@
 import { getAuth, setAuth } from "../shared/storage.js";
+import { apiPost } from "../shared/api-client.js";
 import { AUTH_EXPIRY_BUFFER_MS, AUTH_TTL_MS } from "../config/constants.js";
 import { API_BASE } from "../config/env.js";
 
@@ -9,8 +10,17 @@ export function registerAuthMessageListener() {
   chrome.runtime.onMessageExternal.addListener(async (message, sender, sendResponse) => {
     if (message?.type !== "AUTH_SUCCESS" || !message.apiKey) return;
     if (!sender.url?.startsWith(API_BASE)) return;
-    // Store result in session storage so the polling loop in authenticateWithGitHub
-    // picks it up even if the service worker was evicted and restarted mid-flow.
+    // Persist immediately: the webapp revokes the previous key whenever it
+    // mints a new one, so an unsolicited AUTH_SUCCESS (e.g. the user opened
+    // /auth/extension directly) must replace our stored key or we are left
+    // holding a revoked one.
+    await setAuth({
+      apiKey: message.apiKey,
+      userId: message.userId,
+      expiresAt: Date.now() + AUTH_TTL_MS,
+    });
+    // Also mirror to session storage so the polling loop in
+    // authenticateWithGitHub resolves even across SW restarts mid-flow.
     await chrome.storage.session.set({
       authResult: { apiKey: message.apiKey, userId: message.userId },
     });
