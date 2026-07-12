@@ -11,7 +11,7 @@ const isProd = process.argv.includes("--prod");
 const DEV_API_BASE = "http://localhost:3000";
 const PROD_API_BASE = process.env.PROD_API_BASE ?? "https://lctracker-webapp.vercel.app";
 
-const STATIC_FILES = ["manifest.json", "popup.html", "popup.css", "icon.png"];
+const STATIC_FILES = ["manifest.json", "popup.html", "popup.css", "icon16.png", "icon48.png", "icon128.png"];
 
 function copyStaticFiles() {
   fs.mkdirSync(DIST, { recursive: true });

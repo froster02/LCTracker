@@ -2,7 +2,7 @@
 
 **Solve on LeetCode. See your progress on a beautiful dashboard. Get every accepted solution committed to your own GitHub repo — automatically.**
 
-LeetCode Galaxy is a Chrome extension + web dashboard that tracks your LeetCode journey with zero manual work:
+LeetCode Galaxy is the **LeetTracker02** Chrome extension + a web dashboard that tracks your LeetCode journey with zero manual work:
 
 - 🔍 **Auto-detects submissions** the moment you hit Submit on leetcode.com
 - 📊 **Dashboard analytics** — activity heatmap, streaks, difficulty breakdown, language usage, performance trends
@@ -14,7 +14,7 @@ LeetCode Galaxy is a Chrome extension + web dashboard that tracks your LeetCode 
 ## How it works (end-to-end)
 
 1. **Sign in with GitHub** on the [dashboard](https://lctracker-webapp.vercel.app). GitHub is your identity — no new password.
-2. **Install the extension** and click *Sign in with GitHub* in its popup. A tab opens, connects the extension to your account, and closes itself.
+2. **Install the LeetTracker02 extension** and click *Sign in with GitHub* in its popup. A tab opens, connects the extension to your account, and closes itself.
 3. **Solve a problem** on leetcode.com and submit. The extension captures the result (status, runtime, memory, your code) and sends it to your dashboard.
 4. **Watch the dashboard update** — new history row, heatmap square, streak tick.
 5. **Check your GitHub** — an accepted solution appears as a commit in your `leetcode-galaxy` repo: `Medium/two-sum/solution.py` plus a metadata README.
@@ -31,8 +31,8 @@ LeetCode Galaxy is a Chrome extension + web dashboard that tracks your LeetCode 
 ## Install (users)
 
 1. Open the dashboard → sign in with GitHub → authorize (the `repo` permission is what lets it create and commit to *your* `leetcode-galaxy` repo).
-2. Load the extension (Chrome Web Store listing pending; for now: `chrome://extensions` → Developer mode → *Load unpacked* → select the built `leetcode-srs-extension/dist/` folder).
-3. Click the extension icon → *Sign in with GitHub* → done. Solve something!
+2. Load the **LeetTracker02** extension (Chrome Web Store listing pending; for now: `chrome://extensions` → Developer mode → *Load unpacked* → select the built `leetcode-srs-extension/dist/` folder).
+3. Click the LeetTracker02 icon → *Sign in with GitHub* → done. Solve something!
 
 ## Self-hosting
 

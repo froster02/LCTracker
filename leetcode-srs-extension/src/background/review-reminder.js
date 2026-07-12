@@ -40,7 +40,7 @@ export async function checkDueReviews() {
 
   chrome.notifications.create(NOTIFICATION_ID, {
     type: "basic",
-    iconUrl: "icon.png",
+    iconUrl: "icon128.png",
     title: `${count} LeetCode review${count > 1 ? "s" : ""} due today`,
     message: `Today you need to do: ${titles.join(", ")}${extra}`,
   });
