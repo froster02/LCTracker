@@ -32,13 +32,13 @@ export default function DashboardPage() {
         <main className="mx-auto max-w-lg px-4 py-24 text-center">
           <h1 className="mb-4 text-2xl font-bold">Sign in required</h1>
           <p className="mb-8 text-muted-foreground">
-            Sign in with Google to view your dashboard and track your LeetCode progress.
+            Sign in with GitHub to view your dashboard and track your LeetCode progress.
           </p>
           <button
-            onClick={() => signIn("google")}
+            onClick={() => signIn("github")}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Sign in with Google
+            Sign in with GitHub
           </button>
         </main>
       </>

@@ -14,10 +14,10 @@ export default function SettingsPage() {
         <main className="mx-auto max-w-lg px-4 py-24 text-center">
           <h1 className="mb-4 text-2xl font-bold">Sign in required</h1>
           <button
-            onClick={() => signIn("google")}
+            onClick={() => signIn("github")}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Sign in with Google
+            Sign in with GitHub
           </button>
         </main>
       </>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
               <h3 className="mb-2 text-sm font-medium">Setup Instructions</h3>
               <ol className="ml-4 list-decimal space-y-2 text-sm text-muted-foreground">
                 <li>Install the LeetCode Galaxy Chrome Extension from the Chrome Web Store (or load it unpacked in developer mode).</li>
-                <li>Click the extension icon and sign in with Google.</li>
+                <li>Click the extension icon and sign in with GitHub.</li>
                 <li>The extension will automatically detect and track your LeetCode submissions.</li>
                 <li>Visit your Dashboard to see rich analytics and progress.</li>
               </ol>
@@ -69,7 +69,7 @@ export default function SettingsPage() {
             <div className="rounded-lg border p-4">
               <h3 className="mb-2 text-sm font-medium">How It Works</h3>
               <p className="text-sm text-muted-foreground">
-                The extension uses Google OAuth to authenticate and receives an API key. 
+                The extension uses GitHub OAuth to authenticate and receives an API key.
                 It intercepts LeetCode submission events to capture problem metadata, language, 
                 runtime, memory, and status. If you go offline, submissions are queued and synced 
                 automatically when connectivity returns.

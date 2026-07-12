@@ -82,10 +82,10 @@ function ExtensionAuthContent() {
               Sign in to connect the extension to your account.
             </p>
             <button
-              onClick={() => signIn("google")}
+              onClick={() => signIn("github")}
               className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              Sign in with Google
+              Sign in with GitHub
             </button>
           </>
         )}

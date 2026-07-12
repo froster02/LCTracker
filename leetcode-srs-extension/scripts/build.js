@@ -9,9 +9,7 @@ const isWatch = process.argv.includes("--watch");
 const isProd = process.argv.includes("--prod");
 
 const DEV_API_BASE = "http://localhost:3000";
-// Set the real deployed origin once known (see DEPLOYMENT.md); falls back to
-// PROD_API_BASE env var so it never has to be hardcoded into source control.
-const PROD_API_BASE = process.env.PROD_API_BASE ?? "https://your-domain.vercel.app";
+const PROD_API_BASE = process.env.PROD_API_BASE ?? "https://lctracker-webapp.vercel.app";
 
 const STATIC_FILES = ["manifest.json", "popup.html", "popup.css", "icon.png"];
 
