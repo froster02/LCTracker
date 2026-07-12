@@ -9,23 +9,24 @@ export async function GET() {
   }
 
   try {
-    const stats = await prisma.userStat.findUnique({
-      where: { userId: session.user.id },
-    });
+    const testSubmissionsFilter = {
+      NOT: [
+        { problemId: "9999" },
+        { problemName: { contains: "SRS Test", mode: "insensitive" as const } },
+        { titleSlug: { startsWith: "srs-", mode: "insensitive" as const } },
+      ],
+    };
 
-    const totalSubmissions = await prisma.submission.count({
-      where: { userId: session.user.id },
-    });
-
-    const acceptedSubmissions = await prisma.submission.count({
-      where: { userId: session.user.id, status: "Accepted" },
-    });
-
-    const recentSubmissions = await prisma.submission.findMany({
-      where: { userId: session.user.id },
-      orderBy: { submittedAt: "desc" },
-      take: 5,
-    });
+    const [stats, totalSubmissions, acceptedSubmissions, recentSubmissions] = await Promise.all([
+      prisma.userStat.findUnique({ where: { userId: session.user.id } }),
+      prisma.submission.count({ where: { userId: session.user.id, ...testSubmissionsFilter } }),
+      prisma.submission.count({ where: { userId: session.user.id, status: "Accepted", ...testSubmissionsFilter } }),
+      prisma.submission.findMany({
+        where: { userId: session.user.id, ...testSubmissionsFilter },
+        orderBy: { submittedAt: "desc" },
+        take: 5,
+      }),
+    ]);
 
     return NextResponse.json({
       stats: stats ?? {

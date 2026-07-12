@@ -1,75 +1,55 @@
-import { apiPost } from "../shared/api-client.js";
 import { getAuth, setAuth } from "../shared/storage.js";
-import { AUTH_EXPIRY_BUFFER_MS, AUTH_TTL_MS, DEV_BYPASS_CLIENT_ID_PLACEHOLDER } from "../config/constants.js";
+import { AUTH_EXPIRY_BUFFER_MS, AUTH_TTL_MS } from "../config/constants.js";
 import { API_BASE } from "../config/env.js";
 
-async function exchangeIdTokenForApiKey(idToken) {
-  const res = await fetch(`${API_BASE}/api/extension/auth`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken }),
+// Dedup concurrent auth attempts — second caller gets the same promise
+let _authInProgress = null;
+
+export function registerAuthMessageListener() {
+  chrome.runtime.onMessageExternal.addListener(async (message, sender, sendResponse) => {
+    if (message?.type !== "AUTH_SUCCESS" || !message.apiKey) return;
+    if (!sender.url?.startsWith(API_BASE)) return;
+    // Store result in session storage so the polling loop in authenticateWithGitHub
+    // picks it up even if the service worker was evicted and restarted mid-flow.
+    await chrome.storage.session.set({
+      authResult: { apiKey: message.apiKey, userId: message.userId },
+    });
+    sendResponse({ ok: true });
   });
-  if (!res.ok) {
-    console.error("[LeetCode Galaxy] API auth failed:", res.status);
-    return null;
-  }
-  const data = await res.json();
-  if (!data.apiKey) {
-    console.error("[LeetCode Galaxy] No apiKey in response");
-    return null;
-  }
-  return { apiKey: data.apiKey, userId: data.userId };
 }
 
-export async function authenticateWithGoogle() {
-  const clientId = chrome.runtime.getManifest().oauth2?.client_id;
-  if (!clientId) {
-    console.error("[LeetCode Galaxy] No OAuth2 client_id in manifest");
-    return null;
-  }
+async function _doAuthenticate() {
+  await chrome.storage.session.remove("authResult");
+  const authUrl = `${API_BASE}/auth/extension?ext_id=${chrome.runtime.id}`;
+  await chrome.tabs.create({ url: authUrl });
 
-  if (clientId === DEV_BYPASS_CLIENT_ID_PLACEHOLDER) {
-    console.log("[LeetCode Galaxy] Using local development authentication bypass");
-    try {
-      return await exchangeIdTokenForApiKey("dev-bypass-token");
-    } catch (error) {
-      console.error("[LeetCode Galaxy] Local bypass error:", error);
-      return null;
-    }
-  }
+  return new Promise((resolve) => {
+    // Poll session storage — survives SW sleep/restart because the external
+    // message listener writes the result to storage on wake-up.
+    const iv = setInterval(async () => {
+      const { authResult } = await chrome.storage.session.get("authResult");
+      if (authResult) {
+        clearInterval(iv);
+        await chrome.storage.session.remove("authResult");
+        resolve({ apiKey: authResult.apiKey, userId: authResult.userId });
+      }
+    }, 500);
 
-  const redirectUri = `https://${chrome.runtime.id}.chromiumapp.org/`;
-  const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  authUrl.searchParams.set("client_id", clientId);
-  authUrl.searchParams.set("redirect_uri", redirectUri);
-  authUrl.searchParams.set("response_type", "id_token");
-  authUrl.searchParams.set("scope", "openid email profile");
-  authUrl.searchParams.set("nonce", Math.random().toString(36).substring(2));
+    // 10-minute timeout
+    setTimeout(() => {
+      clearInterval(iv);
+      resolve(null);
+    }, 10 * 60 * 1000);
+  });
+}
 
+export async function authenticateWithGitHub() {
+  if (_authInProgress) return _authInProgress;
+  _authInProgress = _doAuthenticate();
   try {
-    const responseUrl = await chrome.identity.launchWebAuthFlow({
-      url: authUrl.toString(),
-      interactive: true,
-    });
-
-    if (!responseUrl) {
-      console.error("[LeetCode Galaxy] OAuth cancelled or failed");
-      return null;
-    }
-
-    const hash = new URL(responseUrl).hash;
-    const params = new URLSearchParams(hash.slice(1));
-    const idToken = params.get("id_token");
-
-    if (!idToken) {
-      console.error("[LeetCode Galaxy] No id_token in OAuth response");
-      return null;
-    }
-
-    return await exchangeIdTokenForApiKey(idToken);
-  } catch (error) {
-    console.error("[LeetCode Galaxy] Auth error:", error);
-    return null;
+    return await _authInProgress;
+  } finally {
+    _authInProgress = null;
   }
 }
 
@@ -99,7 +79,7 @@ export async function ensureAuth() {
     }
   }
 
-  const result = await authenticateWithGoogle();
+  const result = await authenticateWithGitHub();
   if (!result) return null;
 
   const newAuth = {

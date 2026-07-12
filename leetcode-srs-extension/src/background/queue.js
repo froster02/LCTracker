@@ -36,7 +36,21 @@ export async function enqueueSubmission(payload) {
   processQueue().catch(console.error);
 }
 
+// Concurrency guard: prevents overlapping invocations from alarm, online event,
+// and enqueueSubmission firing simultaneously.
+let _processing = false;
+
 export async function processQueue() {
+  if (_processing) return;
+  _processing = true;
+  try {
+    await _processQueueInner();
+  } finally {
+    _processing = false;
+  }
+}
+
+async function _processQueueInner() {
   const auth = await getAuth();
   if (!auth.apiKey) {
     console.log("[LeetCode Galaxy] No auth, skipping queue processing");
@@ -47,10 +61,11 @@ export async function processQueue() {
   if (queue.length === 0) return;
 
   const processedIds = [];
+  let authExpired = false;
 
   for (const item of queue) {
     if (item.attempts >= MAX_QUEUE_ATTEMPTS) {
-      processedIds.push(item.id); // Drop permanently failed items
+      processedIds.push(item.id);
       continue;
     }
 
@@ -74,7 +89,8 @@ export async function processQueue() {
         console.warn("[LeetCode Galaxy] Auth expired during queue processing");
         await setAuth({ apiKey: null, userId: null, expiresAt: null });
         notify({ action: ACTIONS.AUTH_EXPIRED });
-        return; // Stop processing, will retry on next trigger
+        authExpired = true;
+        break; // stop processing; save queue state below before returning
       } else {
         item.attempts++;
         item.lastAttempt = Date.now();
@@ -87,13 +103,13 @@ export async function processQueue() {
     }
   }
 
-  if (processedIds.length > 0) {
-    queue = queue.filter((q) => !processedIds.includes(q.id));
-    await setQueue(queue);
-  }
+  // Always persist queue mutations (attempt counts, removals) before returning
+  const updated = queue.filter((q) => !processedIds.includes(q.id));
+  await setQueue(updated);
 
-  const remaining = await getQueue();
-  if (remaining.length > 0) {
+  if (authExpired) return;
+
+  if (updated.length > 0) {
     chrome.alarms.create(ALARM_NAMES.PROCESS_QUEUE, { delayInMinutes: RETRY_ALARM_DELAY_MIN });
   }
 }

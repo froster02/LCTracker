@@ -13,7 +13,6 @@ export const ALARM_NAMES = {
 
 export const REVIEW_REMINDER_PERIOD_MIN = 1440; // daily
 
-export const DEV_BYPASS_CLIENT_ID_PLACEHOLDER = "YOUR_GOOGLE_CLIENT_ID";
 
 export const AUTH_EXPIRY_BUFFER_MS = 24 * 60 * 60 * 1000; // re-auth a day before expiry
 export const AUTH_TTL_MS = 30 * 24 * 60 * 60 * 1000;

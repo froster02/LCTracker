@@ -1,7 +1,7 @@
 import { API_BASE } from "../config/env.js";
 import { ensureAuth } from "./auth.js";
 import { notify, ACTIONS } from "../shared/messaging.js";
-import { setLastSync } from "../shared/storage.js";
+import { setAuth, setLastSync } from "../shared/storage.js";
 import { HISTORY_BATCH_SIZE, HISTORY_PAGE_DELAY_MS, HISTORY_PAGE_SIZE } from "../config/constants.js";
 
 function reportProgress(phase, extra = {}) {
@@ -126,6 +126,12 @@ export async function syncHistoryFromLeetCode(tabId, startDate, endDate) {
         body: JSON.stringify({ submissions: batch }),
       });
 
+      if (res.status === 401) {
+        await setAuth({ apiKey: null, userId: null, expiresAt: null });
+        notify({ action: ACTIONS.AUTH_EXPIRED });
+        reportProgress("error", { error: "Session expired. Please sign in again." });
+        return;
+      }
       if (!res.ok) {
         console.error("[LeetCode Galaxy] Batch sync failed:", res.status);
         reportProgress("error", { error: `Batch sync failed: ${res.status}` });

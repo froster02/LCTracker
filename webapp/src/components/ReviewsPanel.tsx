@@ -8,6 +8,7 @@ import { StagePipeline } from "@/components/StagePipeline";
 export function ReviewsPanel() {
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/reviews")
@@ -16,11 +17,18 @@ export function ReviewsPanel() {
         setReviews(json.reviews ?? []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError("Failed to load reviews. Try refreshing.");
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
+  }
+
+  if (error) {
+    return <p className="text-sm text-red-500">{error}</p>;
   }
 
   const pipelineItems = reviews.map((r) => ({ stage: r.mastered ? 3 : r.stage }));

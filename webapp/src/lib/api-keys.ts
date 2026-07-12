@@ -9,19 +9,15 @@ export function generateApiKey(): { rawKey: string; keyHash: string } {
   return { rawKey, keyHash };
 }
 
-export async function validateApiKey(keyHash: string): Promise<{ userId: string; apiKeyId: string } | null> {
-  const apiKey = await prisma.apiKey.findUnique({
-    where: { keyHash },
-  });
+export async function validateApiKey(
+  keyHash: string
+): Promise<{ userId: string; apiKeyId: string } | "expired" | null> {
+  const apiKey = await prisma.apiKey.findUnique({ where: { keyHash } });
+  if (!apiKey) return null;
+  if (apiKey.revoked || (apiKey.expiresAt && apiKey.expiresAt < new Date())) return "expired";
 
-  if (!apiKey || apiKey.revoked) return null;
-  if (apiKey.expiresAt && apiKey.expiresAt < new Date()) return null;
-
-  // Update last used
-  await prisma.apiKey.update({
-    where: { id: apiKey.id },
-    data: { lastUsedAt: new Date() },
-  });
+  // Update last used (fire-and-forget to avoid blocking the request)
+  prisma.apiKey.update({ where: { id: apiKey.id }, data: { lastUsedAt: new Date() } }).catch(() => {});
 
   return { userId: apiKey.userId, apiKeyId: apiKey.id };
 }

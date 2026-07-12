@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     const keyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
 
     const valid = await validateApiKey(keyHash);
-    if (!valid) {
-      return NextResponse.json({ error: "Invalid or expired API key" }, { status: 401 });
+    if (!valid || valid === "expired") {
+      return NextResponse.json({ error: "api_key_expired" }, { status: 401 });
     }
 
     // Revoke old key

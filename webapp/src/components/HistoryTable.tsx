@@ -46,9 +46,11 @@ export function HistoryTable() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, pages: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPage = (page: number) => {
     setLoading(true);
+    setError(null);
     fetch(`/api/submissions?page=${page}&limit=20`)
       .then((res) => res.json())
       .then((json) => {
@@ -56,7 +58,10 @@ export function HistoryTable() {
         setPagination(json.pagination ?? { page: 1, limit: 20, total: 0, pages: 0 });
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError("Failed to load submissions. Try refreshing.");
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -71,6 +76,8 @@ export function HistoryTable() {
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : error ? (
+          <p className="text-sm text-red-500">{error}</p>
         ) : submissions.length === 0 ? (
           <p className="text-sm text-muted-foreground">No submissions yet. Install the Chrome extension to start tracking!</p>
         ) : (

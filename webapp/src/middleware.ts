@@ -7,15 +7,32 @@ export default auth((req) => {
     req.nextUrl.pathname.startsWith("/dashboard") ||
     req.nextUrl.pathname.startsWith("/settings");
 
-  // CORS for extension API routes
-  if (
+  // CORS for extension API routes — scope to chrome-extension:// origins only
+  const isExtensionRoute =
     req.nextUrl.pathname.startsWith("/api/extension") ||
     req.nextUrl.pathname === "/api/submissions" ||
-    req.nextUrl.pathname === "/api/sync/history"
-  ) {
+    req.nextUrl.pathname.startsWith("/api/sync") ||
+    req.nextUrl.pathname.startsWith("/api/reviews");
+  if (isExtensionRoute) {
+    const origin = req.headers.get("Origin") ?? "";
+    // OPTIONS preflight
+    if (req.method === "OPTIONS") {
+      const res = new NextResponse(null, { status: 204 });
+      if (origin.startsWith("chrome-extension://")) {
+        res.headers.set("Access-Control-Allow-Origin", origin);
+        res.headers.set("Vary", "Origin");
+      }
+      res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.headers.set("Access-Control-Allow-Headers", "Content-Type, x-api-key");
+      res.headers.set("Access-Control-Max-Age", "86400");
+      return res;
+    }
     const response = NextResponse.next();
-    response.headers.set("Access-Control-Allow-Origin", "*");
-    response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    if (origin.startsWith("chrome-extension://")) {
+      response.headers.set("Access-Control-Allow-Origin", origin);
+      response.headers.set("Vary", "Origin");
+    }
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, x-api-key");
     return response;
   }

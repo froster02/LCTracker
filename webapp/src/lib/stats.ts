@@ -2,7 +2,15 @@ import { prisma } from "@/lib/prisma";
 
 export async function recalculateUserStats(userId: string): Promise<void> {
   const submissions = await prisma.submission.findMany({
-    where: { userId },
+    where: {
+      userId,
+      NOT: [
+        { problemId: "9999" },
+        { problemName: { contains: "SRS Test", mode: "insensitive" as const } },
+        { titleSlug: { startsWith: "srs-", mode: "insensitive" as const } },
+      ],
+    },
+    select: { problemId: true, status: true, difficulty: true, submittedAt: true },
     orderBy: { submittedAt: "asc" },
   });
 
@@ -126,33 +134,28 @@ export async function getSubmissionHeatmap(userId: string, from?: Date, to?: Dat
 }
 
 export async function getLanguageDistribution(userId: string): Promise<{ language: string; count: number }[]> {
-  const submissions = await prisma.submission.findMany({
+  const rows = await prisma.submission.groupBy({
+    by: ["language"],
     where: { userId, status: "Accepted" },
-    select: { language: true },
+    _count: { language: true },
   });
-
-  const counts: Record<string, number> = {};
-  for (const s of submissions) {
-    counts[s.language] = (counts[s.language] || 0) + 1;
-  }
-
-  return Object.entries(counts)
-    .map(([language, count]) => ({ language, count }))
+  return rows
+    .map((r) => ({ language: r.language, count: r._count.language }))
     .sort((a, b) => b.count - a.count);
 }
 
 export async function getMonthlyActivity(userId: string): Promise<{ month: string; count: number }[]> {
-  const submissions = await prisma.submission.findMany({
+  // groupBy on a date-derived field isn't directly supported by Prisma — fetch
+  // only submittedAt and aggregate in JS (still avoids pulling all columns).
+  const rows = await prisma.submission.findMany({
     where: { userId, status: "Accepted" },
     select: { submittedAt: true },
   });
-
   const counts: Record<string, number> = {};
-  for (const s of submissions) {
+  for (const s of rows) {
     const month = s.submittedAt.toISOString().slice(0, 7);
     counts[month] = (counts[month] || 0) + 1;
   }
-
   return Object.entries(counts)
     .map(([month, count]) => ({ month, count }))
     .sort((a, b) => a.month.localeCompare(b.month));

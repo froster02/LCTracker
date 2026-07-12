@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { recalculateUserStats } from "@/lib/stats";
 import { recalculateReviewsFromHistory } from "@/lib/reviews";
-import { validateApiKey } from "@/lib/api-keys";
+import { rateLimitResponse } from "@/lib/rate-limit";
+import { getUserIdFromRequest } from "@/lib/request-auth";
 import { z } from "zod";
-import crypto from "crypto";
 
 const syncItemSchema = z.object({
   problemId: z.string().min(1),
@@ -13,7 +12,20 @@ const syncItemSchema = z.object({
   titleSlug: z.string().min(1),
   difficulty: z.enum(["Easy", "Medium", "Hard"]),
   language: z.string().optional().default("Unknown"),
-  status: z.enum(["Accepted", "Wrong Answer", "Time Limit Exceeded", "Memory Limit Exceeded", "Runtime Error", "Compile Error", "Output Limit Exceeded", "Pending", "Rejected"]).optional().default("Accepted"),
+  status: z
+    .enum([
+      "Accepted",
+      "Wrong Answer",
+      "Time Limit Exceeded",
+      "Memory Limit Exceeded",
+      "Runtime Error",
+      "Compile Error",
+      "Output Limit Exceeded",
+      "Pending",
+      "Rejected",
+    ])
+    .optional()
+    .default("Accepted"),
   url: z.string().url().optional(),
   submittedAt: z.string().datetime().optional(),
 });
@@ -22,28 +34,14 @@ const syncBodySchema = z.object({
   submissions: z.array(syncItemSchema).max(1000),
 });
 
-async function getUserIdFromRequest(request: Request): Promise<string | null> {
-  // Try API key first (for extension)
-  const apiKey = request.headers.get("x-api-key");
-  if (apiKey) {
-    const keyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
-    const valid = await validateApiKey(keyHash);
-    if (valid) return valid.userId;
-  }
-
-  // Try session cookie (for dashboard)
-  try {
-    const session = await auth();
-    if (session?.user?.id) return session.user.id;
-  } catch {
-    // auth() may throw if no session
-  }
-
-  return null;
-}
-
 export async function POST(request: Request) {
+  const limit = rateLimitResponse(request, 5, 60 * 1000);
+  if (!limit.success && limit.response) return limit.response;
+
   const userId = await getUserIdFromRequest(request);
+  if (userId === "expired") {
+    return NextResponse.json({ error: "api_key_expired" }, { status: 401 });
+  }
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -59,30 +57,45 @@ export async function POST(request: Request) {
       );
     }
 
-    const items = parsed.data.submissions;
+    const items = parsed.data.submissions.filter(
+      (item) =>
+        item.problemId !== "9999" &&
+        !item.problemName.includes("SRS Test") &&
+        !item.titleSlug.startsWith("srs-")
+    );
 
-    const created = [];
-    const skipped = [];
+    if (items.length === 0) {
+      return NextResponse.json({ success: true, created: 0, skipped: 0 });
+    }
 
-    for (const item of items) {
-      const submittedAt = item.submittedAt ? new Date(item.submittedAt) : new Date();
-      const fiveMinAgo = new Date(submittedAt.getTime() - 5 * 60 * 1000);
+    // Batch dedup: fetch all existing submissions for this user in one query,
+    // then diff in memory rather than one findFirst per item.
+    const problemIds = [...new Set(items.map((i) => i.problemId))];
+    const earliest = items.reduce<Date>((min, i) => {
+      const d = i.submittedAt ? new Date(i.submittedAt) : new Date();
+      return d < min ? d : min;
+    }, new Date());
+    const windowStart = new Date(earliest.getTime() - 5 * 60 * 1000);
 
-      const existing = await prisma.submission.findFirst({
-        where: {
-          userId,
-          problemId: item.problemId,
-          submittedAt: { gte: fiveMinAgo, lte: submittedAt },
-        },
-      });
+    const existing = await prisma.submission.findMany({
+      where: { userId, problemId: { in: problemIds }, submittedAt: { gte: windowStart } },
+      select: { problemId: true, submittedAt: true },
+    });
 
-      if (existing) {
-        skipped.push(item.problemId);
-        continue;
-      }
+    // Build a Set of "problemId:timestamp-bucket" keys for O(1) lookup
+    const existingKeys = new Set(
+      existing.map((e) => `${e.problemId}:${Math.floor(e.submittedAt.getTime() / (5 * 60 * 1000))}`)
+    );
 
-      const submission = await prisma.submission.create({
-        data: {
+    const toCreate = items.filter((item) => {
+      const ts = item.submittedAt ? new Date(item.submittedAt) : new Date();
+      const bucket = Math.floor(ts.getTime() / (5 * 60 * 1000));
+      return !existingKeys.has(`${item.problemId}:${bucket}`);
+    });
+
+    if (toCreate.length > 0) {
+      await prisma.submission.createMany({
+        data: toCreate.map((item) => ({
           userId,
           problemId: item.problemId,
           problemName: item.problemName,
@@ -91,10 +104,10 @@ export async function POST(request: Request) {
           language: item.language,
           status: item.status,
           url: item.url ?? `https://leetcode.com/problems/${item.titleSlug}/`,
-          submittedAt,
-        },
+          submittedAt: item.submittedAt ? new Date(item.submittedAt) : new Date(),
+        })),
+        skipDuplicates: true,
       });
-      created.push(submission.id);
     }
 
     await recalculateUserStats(userId);
@@ -102,8 +115,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      created: created.length,
-      skipped: skipped.length,
+      created: toCreate.length,
+      skipped: items.length - toCreate.length,
     });
   } catch (error) {
     console.error("Sync error:", error);

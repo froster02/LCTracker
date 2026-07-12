@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 
@@ -21,10 +21,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 create: {
                   email: "arushnaudiyal@gmail.com",
                   name: (credentials?.name as string) || "Arush Naudiyal (Dev Mode)",
-                  googleId: "dev-google-id-12345",
+                  githubId: "dev-github-id-12345",
                 },
               });
-              // Ensure stats exist
               await prisma.userStat.upsert({
                 where: { userId: user.id },
                 update: {},
@@ -40,36 +39,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+    GitHub({
+      clientId: process.env.GITHUB_ID!,
+      clientSecret: process.env.GITHUB_SECRET!,
       authorization: {
-        params: {
-          scope: "openid email profile",
-          access_type: "offline",
-          prompt: "consent",
-        },
+        params: { scope: "read:user user:email" },
       },
     }),
   ],
   callbacks: {
     async signIn({ account, profile }) {
-      if (account?.provider === "google" && profile?.email) {
+      if (account?.provider === "github") {
+        // GitHub may return null email if private; fall back to noreply address
+        const email =
+          (profile?.email as string | null) ||
+          `${profile?.id}@users.noreply.github.com`;
         const user = await prisma.user.upsert({
-          where: { email: profile.email },
+          where: { email },
           update: {
-            name: profile.name as string | null,
-            image: (profile.picture || profile.image || null) as string | null,
-            googleId: profile.sub as string,
+            name: (profile?.name as string | null) || (profile?.login as string | null),
+            image: (profile?.avatar_url || profile?.image || null) as string | null,
+            githubId: String(profile?.id),
           },
           create: {
-            email: profile.email,
-            name: profile.name as string | null,
-            image: (profile.picture || profile.image || null) as string | null,
-            googleId: profile.sub as string,
+            email,
+            name: (profile?.name as string | null) || (profile?.login as string | null),
+            image: (profile?.avatar_url || profile?.image || null) as string | null,
+            githubId: String(profile?.id),
           },
         });
-        // Ensure stats exist
         await prisma.userStat.upsert({
           where: { userId: user.id },
           update: {},
@@ -82,10 +80,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.sub = user.id;
       }
-      if (account?.provider === "google") {
+      if (account?.provider === "github") {
         token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
-        token.expiresAt = account.expires_at;
       }
       return token;
     },
@@ -94,7 +90,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub;
       }
       session.accessToken = token.accessToken as string | undefined;
-      session.refreshToken = token.refreshToken as string | undefined;
       return session;
     },
   },
@@ -114,7 +109,6 @@ declare module "next-auth" {
       image?: string | null;
     };
     accessToken?: string;
-    refreshToken?: string;
   }
 
   interface User {
@@ -125,7 +119,5 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     accessToken?: string;
-    refreshToken?: string;
-    expiresAt?: number;
   }
 }

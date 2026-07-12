@@ -12,7 +12,7 @@ model User {
   email         String    @unique
   name          String?
   image         String?
-  googleId      String    @unique
+  githubId      String?   @unique
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -44,6 +44,7 @@ model Submission {
 
   @@index([userId, submittedAt])
   @@index([userId, status])
+  @@index([userId, problemId, submittedAt])
   @@index([submittedAt])
   @@map("submissions")
 }

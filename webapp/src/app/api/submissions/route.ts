@@ -1,31 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { submissionSchema } from "@/lib/schemas";
 import { recalculateUserStats } from "@/lib/stats";
 import { upsertReviewOnAccepted } from "@/lib/reviews";
-import { validateApiKey } from "@/lib/api-keys";
 import { rateLimitResponse } from "@/lib/rate-limit";
-import crypto from "crypto";
+import { getUserIdFromRequest } from "@/lib/request-auth";
 
-async function getUserIdFromRequest(request: Request): Promise<string | null> {
-  // Try API key first (for extension)
-  const apiKey = request.headers.get("x-api-key");
-  if (apiKey) {
-    const keyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
-    const valid = await validateApiKey(keyHash);
-    if (valid) return valid.userId;
-  }
-
-  // Try session cookie (for dashboard)
-  try {
-    const session = await auth();
-    if (session?.user?.id) return session.user.id;
-  } catch {
-    // auth() may throw if no session
-  }
-
-  return null;
+function unauthorizedResponse(userId: string | "expired" | null) {
+  if (userId === "expired") return NextResponse.json({ error: "api_key_expired" }, { status: 401 });
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
 export async function POST(request: Request) {
@@ -33,9 +16,7 @@ export async function POST(request: Request) {
   if (!limit.success && limit.response) return limit.response;
 
   const userId = await getUserIdFromRequest(request);
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!userId || userId === "expired") return unauthorizedResponse(userId);
 
   try {
     const body = await request.json();
@@ -49,6 +30,18 @@ export async function POST(request: Request) {
     }
 
     const data = parsed.data;
+
+    // Block test submissions (SRS Test, problemId: 9999, etc.)
+    if (
+      data.problemId === "9999" ||
+      data.problemName.includes("SRS Test") ||
+      data.titleSlug.startsWith("srs-")
+    ) {
+      return NextResponse.json(
+        { error: "Test submissions are not allowed" },
+        { status: 400 }
+      );
+    }
 
     // Deduplicate: check for same problem + same submittedAt (within 5 min)
     const submittedAt = data.submittedAt ? new Date(data.submittedAt) : new Date();
@@ -109,9 +102,7 @@ export async function GET(request: Request) {
   if (!limit.success && limit.response) return limit.response;
 
   const userId = await getUserIdFromRequest(request);
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!userId || userId === "expired") return unauthorizedResponse(userId);
 
   try {
     const { searchParams } = new URL(request.url);
@@ -123,7 +114,14 @@ export async function GET(request: Request) {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
 
-    const where: any = { userId };
+    const where: any = {
+      userId,
+      NOT: [
+        { problemId: "9999" },
+        { problemName: { contains: "SRS Test", mode: "insensitive" as const } },
+        { titleSlug: { startsWith: "srs-", mode: "insensitive" as const } },
+      ],
+    };
     if (status) where.status = status;
     if (difficulty) where.difficulty = difficulty;
     if (language) where.language = language;

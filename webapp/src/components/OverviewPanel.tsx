@@ -29,6 +29,7 @@ interface StatsResponse {
 export function OverviewPanel() {
   const [statsData, setStatsData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/stats")
@@ -37,11 +38,18 @@ export function OverviewPanel() {
         setStatsData(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError("Failed to load analytics. Try refreshing.");
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading your analytics...</p>;
+  }
+
+  if (error) {
+    return <p className="text-sm text-red-500">{error}</p>;
   }
 
   return (

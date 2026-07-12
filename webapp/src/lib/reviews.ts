@@ -105,7 +105,15 @@ export async function upsertReviewOnAccepted(userId: string, sub: AcceptedSubmis
 // history sync where items can arrive in any order.
 export async function recalculateReviewsFromHistory(userId: string): Promise<void> {
   const accepted = await prisma.submission.findMany({
-    where: { userId, status: "Accepted" },
+    where: {
+      userId,
+      status: "Accepted",
+      NOT: [
+        { problemId: "9999" },
+        { problemName: { contains: "SRS Test", mode: "insensitive" as const } },
+        { titleSlug: { startsWith: "srs-", mode: "insensitive" as const } },
+      ],
+    },
     orderBy: { submittedAt: "asc" },
     select: {
       problemId: true,
