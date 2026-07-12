@@ -9,11 +9,9 @@ const isWatch = process.argv.includes("--watch");
 const isProd = process.argv.includes("--prod");
 
 const DEV_API_BASE = "http://localhost:3000";
-// Set the real deployed origin once known (see DEPLOYMENT.md); falls back to
-// PROD_API_BASE env var so it never has to be hardcoded into source control.
-const PROD_API_BASE = process.env.PROD_API_BASE ?? "https://your-domain.vercel.app";
+const PROD_API_BASE = process.env.PROD_API_BASE ?? "https://lctracker-webapp.vercel.app";
 
-const STATIC_FILES = ["manifest.json", "popup.html", "popup.css", "icon.png"];
+const STATIC_FILES = ["manifest.json", "popup.html", "popup.css", "icon16.png", "icon48.png", "icon128.png"];
 
 function copyStaticFiles() {
   fs.mkdirSync(DIST, { recursive: true });
@@ -26,6 +24,7 @@ const buildOptions = {
   entryPoints: {
     background: path.join(ROOT, "src/background/index.js"),
     content: path.join(ROOT, "src/content/index.js"),
+    "content-main": path.join(ROOT, "src/content/main-world.js"),
     popup: path.join(ROOT, "src/popup/index.js"),
   },
   bundle: true,

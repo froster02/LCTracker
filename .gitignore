@@ -8,5 +8,8 @@ node_modules
 leetcode-srs-extension/dist/
 leetcode-srs-extension/*.zip
 
-# webapp/ has its own separate local git repo — not nested here
-webapp/
+# Webapp build/runtime artifacts
+webapp/.next/
+webapp/.git.bak/
+.env.local
+.env*.local

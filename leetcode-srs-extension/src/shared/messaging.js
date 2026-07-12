@@ -11,7 +11,13 @@ export const ACTIONS = {
 
 export function sendMessage(message) {
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage(message, (response) => resolve(response));
+    chrome.runtime.sendMessage(message, (response) => {
+      if (chrome.runtime.lastError) {
+        resolve(undefined);
+        return;
+      }
+      resolve(response);
+    });
   });
 }
 

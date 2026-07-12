@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "LeetCode Galaxy Tracker",
-  "version": "3.0.0",
-  "description": "Automatically track LeetCode submissions with rich analytics and offline support.",
+  "name": "LeetTracker02",
+  "version": "3.1.0",
+  "description": "Auto-track LeetCode submissions, see rich analytics, and back up accepted solutions to your GitHub.",
   "permissions": [
     "storage",
-    "identity",
     "alarms",
-    "scripting"
+    "scripting",
+    "notifications"
   ],
   "host_permissions": [
     "*://leetcode.com/*",
@@ -21,23 +21,28 @@
       "matches": ["*://leetcode.com/*", "*://*.leetcode.com/*"],
       "js": ["content.js"],
       "run_at": "document_end"
+    },
+    {
+      "matches": ["*://leetcode.com/*", "*://*.leetcode.com/*"],
+      "js": ["content-main.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon.png",
-      "48": "icon.png",
-      "128": "icon.png"
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
     }
   },
   "icons": {
-    "16": "icon.png",
-    "48": "icon.png",
-    "128": "icon.png"
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
   },
-  "oauth2": {
-    "client_id": "YOUR_GOOGLE_CLIENT_ID",
-    "scopes": ["openid", "email", "profile"]
+  "externally_connectable": {
+    "matches": ["https://lctracker-webapp.vercel.app/*"]
   }
 }

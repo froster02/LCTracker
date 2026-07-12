@@ -13,7 +13,7 @@
 │  │ Chrome Extension │◄────────►│ leetcode.com (content    │   │
 │  │ (Manifest V3)    │          │   script monitors SPA)   │   │
 │  │  - Service Worker│          └────────────────────────────┘   │
-│  │  - OAuth (Google)│                                           │
+│  │  - OAuth (GitHub)│                                           │
 │  │  - Offline Queue │                                           │
 │  └────────┬─────────┘                                           │
 │           │ HTTPS POST /api/submissions                         │
@@ -47,7 +47,7 @@
                                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      SUPABASE / POSTGRES                          │
-│  - users (synced from Google OAuth)                               │
+│  - users (synced from GitHub OAuth)                               │
 │  - submissions (detailed per-submission records)                   │
 │  - problems (canonical LeetCode problem metadata)                  │
 │  - user_stats (materialized aggregates for fast reads)             │
@@ -61,13 +61,15 @@
 ## 2. Database Schema (Prisma)
 
 ```prisma
-// User — synced from Google OAuth
+// User — synced from GitHub OAuth
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
   image         String?
-  googleId      String    @unique
+  githubId      String?   @unique
+  githubLogin   String?
+  githubAccessToken String?  // AES-256-GCM encrypted; used for solution repo sync
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -158,20 +160,27 @@ model ContestParticipation {
 
 ## 3. Authentication Flow
 
-### Dashboard Auth (Auth.js v5 + Google OAuth)
-1. User visits dashboard → clicks Sign In with Google
-2. Auth.js handles OAuth 2.0 flow with Google
-3. Backend creates/updates `User` record in database
+### Dashboard Auth (Auth.js v5 + GitHub OAuth)
+1. User visits dashboard → clicks Sign in with GitHub
+2. Auth.js handles OAuth 2.0 flow with GitHub (scope: `read:user user:email repo`)
+3. Backend upserts `User` (githubId, githubLogin, encrypted access token)
 4. Session cookie stored in browser
 5. Dashboard reads session via `useSession()` / `auth()`
 
-### Extension Auth (Google Identity + API Key)
-1. Extension popup → "Sign In with Google" button
-2. Extension uses `chrome.identity.launchWebAuthFlow` for OAuth
-3. After successful OAuth, extension calls `/api/extension/auth` with Google ID token
-4. Backend verifies Google ID token, creates/updates `User`, returns an API Key
-5. Extension stores API Key in `chrome.storage.local` securely
-6. All future submissions use `x-api-key` header for authentication
+### Extension Auth (tab-based + API Key)
+1. Extension popup → "Sign in with GitHub" button
+2. Background opens a tab at `{webapp}/auth/extension?ext_id={extensionId}`
+3. Page (session-authenticated via GitHub OAuth) mints an API key and delivers it
+   with `chrome.runtime.sendMessage(extId, …)` (`externally_connectable`)
+4. Service worker stores the key in `chrome.storage.local`; a
+   `chrome.storage.session` poll survives MV3 worker sleep during the flow
+5. All future submissions use `x-api-key` header for authentication
+
+### GitHub Solution Sync
+- On every **Accepted** submission carrying code, the server commits
+  `{Difficulty}/{titleSlug}/solution.{ext}` + a metadata README to the user's
+  `leetcode-galaxy` repo (created private on first use) using the stored
+  encrypted token. Fire-and-forget: repo failures never block ingest.
 
 ### Token Refresh Strategy
 - Extension stores `apiKey` + `apiKeyExpiry`
@@ -186,7 +195,7 @@ model ContestParticipation {
 ### Auth Routes
 ```
 GET  /api/auth/[...nextauth]       — Auth.js OAuth routes
-POST /api/extension/auth           — Exchange Google ID token for API Key
+POST /api/extension/auth-session   — Mint API key from the signed-in session
 POST /api/extension/refresh        — Refresh API Key
 POST /api/extension/logout         — Revoke API Key
 ```
@@ -220,7 +229,7 @@ extension/
 │   ├── popup.ts
 │   └── popup.css
 ├── auth/
-│   └── oauth.ts               — Google OAuth helper for extensions
+│   └── github-sync.ts         — Commit accepted solutions to the user's repo
 ├── lib/
 │   ├── api.ts                 — API client with retry logic
 │   ├── queue.ts               — Offline submission queue
@@ -332,8 +341,8 @@ components/
 ```
 # Environment Variables
 AUTH_SECRET=<random-32-char-string>
-AUTH_GOOGLE_ID=<google-client-id>
-AUTH_GOOGLE_SECRET=<google-client-secret>
+GITHUB_ID=<github-oauth-client-id>
+GITHUB_SECRET=<github-oauth-client-secret>
 DATABASE_URL=postgresql://... (or Supabase connection string)
 DIRECT_URL=postgresql://... (for Prisma migrations)
 REDIS_URL=redis://... (Upstash)
@@ -353,7 +362,7 @@ npx prisma generate
 
 ### Phase 1: MVP (Week 1-2)
 - [x] Database schema (Prisma + PostgreSQL)
-- [x] Auth.js setup with Google OAuth
+- [x] Auth.js setup with GitHub OAuth
 - [x] Extension API key authentication
 - [x] Basic submission capture + storage
 - [x] Dashboard with stats cards + heatmap

@@ -1,144 +1,106 @@
 # LeetCode Galaxy — Deployment Guide
 
-## 1. Database Setup (Supabase Recommended)
+## 1. Database Setup (Neon recommended)
 
-1. Create a project at [Supabase](https://supabase.com)
-2. Go to Project Settings → Database → Connection String
-3. Copy the `URI` connection string (choose the Transaction Pooler for serverless)
-4. Set `DATABASE_URL` in your Vercel env vars
-
-```bash
-# Supabase Transaction Pooler (recommended for serverless)
-DATABASE_URL=postgresql://postgres.xxxxxx:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
-
-# For Prisma migrations (Direct Connection)
-DIRECT_URL=postgresql://postgres.xxxxxx:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:5432/postgres
-```
-
-5. Run migrations:
+1. Create a project at [Neon](https://neon.tech) (or Supabase / any Postgres)
+2. Copy the pooled connection string → `DATABASE_URL` in Vercel env vars
+3. Apply the schema (this repo uses `db push`, not migrations):
 ```bash
 cd webapp
-npx prisma migrate deploy
+npx prisma db push
 npx prisma generate
 ```
 
-## 2. Google OAuth Setup
+## 2. GitHub OAuth App Setup
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (or use existing)
-3. APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID
-4. Application type: **Web application**
-5. Authorized redirect URIs:
-   - `https://your-domain.vercel.app/api/auth/callback/google`
-   - `http://localhost:3000/api/auth/callback/google` (for dev)
-6. Copy Client ID and Client Secret
+1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**
+2. Homepage URL: `https://your-domain.vercel.app`
+3. Authorization callback URL: `https://your-domain.vercel.app/api/auth/callback/github`
+4. Register → copy **Client ID** → generate a **Client Secret** (copy it immediately; shown once)
 
-### Extension OAuth
-The extension uses the **same** Google OAuth client ID via `chrome.identity.launchWebAuthFlow`.
-
-You need to add the extension's OAuth redirect URI:
-- Format: `https://<EXTENSION_ID>.chromiumapp.org/`
-- To find your extension ID: load the extension in Chrome developer mode, the ID is shown on the extensions page
-- Add `https://YOUR_EXTENSION_ID.chromiumapp.org/` to Authorized redirect URIs
-
-Update `leetcode-srs-extension/manifest.json`:
-```json
-"oauth2": {
-  "client_id": "YOUR_GOOGLE_CLIENT_ID",
-  "scopes": ["openid", "email", "profile"]
-}
-```
+Notes:
+- The app requests `read:user user:email repo` scope. `repo` is what lets it create the user's `leetcode-galaxy` repo and commit accepted solutions to it.
+- The extension needs **no OAuth config** — it authenticates through a webapp tab (`/auth/extension`) and receives an API key via `externally_connectable` messaging.
 
 ## 3. Vercel Deployment
 
 ### Environment Variables
 ```bash
-AUTH_SECRET=$(openssl rand -base64 32)  # Generate a random secret
-AUTH_GOOGLE_ID=your-google-client-id
-AUTH_GOOGLE_SECRET=your-google-client-secret
-DATABASE_URL=your-supabase-pooler-url
-DIRECT_URL=your-supabase-direct-url
+AUTH_SECRET=$(openssl rand -base64 32)
+AUTH_URL=https://your-domain.vercel.app
+GITHUB_ID=your-github-client-id
+GITHUB_SECRET=your-github-client-secret
+DATABASE_URL=your-postgres-pooler-url
 ```
 
 ### Build Settings
-Vercel auto-detects Next.js. Just connect your Git repo and deploy.
+`webapp/vercel.json` already sets `npx prisma generate && npm run build`. Set the project's Root Directory to `webapp/`. Deploy with `vercel --prod` or connect the Git repo.
 
-Make sure to add these build commands in Vercel project settings:
-```bash
-# Build Command
-prisma generate && next build
-
-# Install Command
-npm install
-```
-
-### Custom Domain (Recommended)
-1. Buy a domain (e.g., `lc-galaxy.com`)
-2. Add it to Vercel project settings
-3. Update `API_BASE` in extension files to `https://lc-galaxy.com`
-4. Update Google OAuth redirect URIs with custom domain
+### Custom Domain
+1. Add domain in Vercel project settings
+2. Update GitHub OAuth App homepage + callback URLs
+3. Rebuild the extension with `PROD_API_BASE=https://your-domain` and update `manifest.json` → `externally_connectable.matches`
 
 ## 4. Extension Setup
 
-### Development (Unpacked)
-1. Open Chrome → `chrome://extensions/`
-2. Enable **Developer mode** (toggle top-right)
-3. Click **Load unpacked** → Select `leetcode-srs-extension` folder
-4. Update `API_BASE` in `background.js` and `content.js` to `http://localhost:3000`
-5. Update `manifest.json` `oauth2.client_id` with your Google Client ID
+### Development (unpacked)
+1. `cd leetcode-srs-extension && npm install && npm run build` (dev build points at `http://localhost:3000`)
+2. Chrome → `chrome://extensions/` → Developer mode → **Load unpacked** → select the **`dist/`** folder (not the repo root)
 
-### Production (Chrome Web Store)
-1. Create a ZIP of the `leetcode-srs-extension` folder
-2. Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
-3. Upload the ZIP
-4. Fill in store listing details
-5. Submit for review
+### Production build
+```bash
+PROD_API_BASE=https://your-domain.vercel.app node scripts/build.js --prod
+# or for the default deployment: npm run zip  (builds + zips dist/ for the Web Store)
+```
+
+### Chrome Web Store
+1. `npm run zip` → upload `leetcode-galaxy.zip` at the [Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+2. Fill in listing, submit for review
 
 ## 5. Post-Deployment Checklist
 
-- [ ] Database migrations applied successfully
-- [ ] Google OAuth sign-in works on dashboard
-- [ ] Extension sign-in works and returns API key
-- [ ] Submission tracking works (submit a LeetCode problem)
-- [ ] Dashboard shows new submission in Recent Submissions
-- [ ] Stats update correctly (total solved, streaks)
-- [ ] Heatmap shows activity
-- [ ] History page paginates correctly
-- [ ] Offline queue works (disconnect internet, submit, reconnect)
-- [ ] Rate limiting responds with 429 when exceeded
-- [ ] Re-authentication flow works (revoke API key, extension prompts re-sign-in)
+- [ ] `prisma db push` applied against production DB
+- [ ] GitHub sign-in works on dashboard (`/auth/signin`)
+- [ ] Extension popup sign-in opens `/auth/extension`, connects, popup shows "Signed in"
+- [ ] Submit a LeetCode problem → appears in dashboard History
+- [ ] Accepted solution committed to `github.com/<you>/leetcode-galaxy`
+- [ ] Stats/heatmap/streaks update
+- [ ] Reviews tab shows the new problem at stage 0 (due +7 days)
+- [ ] History sync imports a date range; re-running it creates 0 duplicates
+- [ ] Offline queue: disconnect, submit, reconnect → submission arrives
+- [ ] Rate limiting returns 429 when hammered
 
 ## 6. Scaling Checklist
 
 For 100K+ users:
-- [ ] Migrate from in-memory rate limiting to Redis (Upstash)
-- [ ] Add PostgreSQL read replicas for analytics queries
-- [ ] Partition `submissions` table by month
-- [ ] Add Redis caching for `UserStat` and `getSubmissionHeatmap`
-- [ ] Set up monitoring (Sentry, Vercel Analytics)
-- [ ] Configure CDN for static assets
-- [ ] Implement tiered rate limits (free vs paid users)
-- [ ] Add database connection pooling (PgBouncer already in Supabase)
+- [ ] Redis-based rate limiting (in-memory store is per-serverless-instance)
+- [ ] Read replicas for analytics queries
+- [ ] Partition `submissions` by month
+- [ ] Cache `UserStat` / heatmap in Redis
+- [ ] Queue GitHub commits (background jobs) instead of fire-and-forget
+- [ ] Monitoring (Sentry, Vercel Analytics)
 
 ## 7. Troubleshooting
 
 ### Extension won't sign in
-- Check `oauth2.client_id` in manifest.json matches Google Console
-- Verify redirect URI `https://<EXT_ID>.chromiumapp.org/` is in Google Console
-- Check extension ID in Chrome developer mode matches the redirect URI
+- Reload the extension after any rebuild (`chrome://extensions`)
+- `manifest.json` → `externally_connectable.matches` must include your webapp origin
+- Check the service worker console (extensions page → "service worker") for errors
 
 ### Submissions not appearing
-- Check browser console for content script errors
-- Check background service worker console for network errors
-- Verify API key is valid (check `chrome.storage.local` in extension devtools)
-- Check `/api/submissions` responds with 200
+- Content script console (leetcode.com devtools) for interceptor errors
+- Service worker console for network errors
+- API key present? (extension devtools → `chrome.storage.local`)
+- `/api/submissions` returns 200?
+
+### Solutions not appearing on GitHub
+- Settings page → GitHub Solution Sync must say "Connected"; if not, sign out/in to grant `repo` scope
+- Commits only happen for **Accepted** submissions that include code
+- Check Vercel function logs for `[github-sync]` errors
+
+### Sign-in "Server error"
+- `GITHUB_ID`/`GITHUB_SECRET` in Vercel must exactly match the OAuth App (watch for O/0 lookalikes — copy-paste, never retype)
+- Callback URL must be `https://<domain>/api/auth/callback/github`
 
 ### Database connection errors
-- Ensure `DATABASE_URL` uses the Transaction Pooler (port 6543) for serverless
-- Use `DIRECT_URL` (port 5432) only for Prisma migrations
-- Check connection limit isn't exceeded
-
-### Build fails on Vercel
-- Ensure `prisma generate` runs before `next build`
-- Check that `DATABASE_URL` is set in Vercel environment variables
-- Verify `next.config.ts` doesn't have invalid config
+- Use the pooled connection string for serverless; `DIRECT_URL` only for `db push`
