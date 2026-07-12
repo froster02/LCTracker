@@ -20,6 +20,7 @@ export const submissionSchema = z.object({
     "Rejected",
   ]),
   codeLength: z.number().int().optional(),
+  code: z.string().max(100_000).optional(),
   url: z.string().url(),
   submittedAt: z.string().datetime().optional(),
 });

@@ -10,6 +10,11 @@ import { sendSubmission } from "./submission-sender.js";
 
 const BRIDGE_SOURCE = "lcg-interceptor";
 
+// The submit request carries the typed code; the later status-check polls do
+// not. Hold the most recent code so it can be attached when the final
+// (non-Pending) response arrives.
+let _lastTypedCode = null;
+
 function handleSubmissionResponse(data) {
   if (!data?.data) return;
 
@@ -44,6 +49,9 @@ function handleSubmissionResponse(data) {
   if (submission.codeLength) {
     details.codeLength = submission.codeLength;
   }
+  if (_lastTypedCode) {
+    details.code = _lastTypedCode.slice(0, 100_000); // server schema cap
+  }
 
   setDetectedSubmission(details);
 
@@ -57,6 +65,9 @@ export function installInterceptorBridge() {
     if (event.source !== window) return;
     if (event.origin !== window.location.origin) return;
     if (event.data?.source !== BRIDGE_SOURCE) return;
+    if (typeof event.data.typedCode === "string" && event.data.typedCode) {
+      _lastTypedCode = event.data.typedCode;
+    }
     handleSubmissionResponse(event.data.data);
   });
 }

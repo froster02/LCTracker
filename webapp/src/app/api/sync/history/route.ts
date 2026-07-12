@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { recalculateUserStats } from "@/lib/stats";
 import { recalculateReviewsFromHistory } from "@/lib/reviews";
+import { commitManyToGitHub } from "@/lib/github-sync";
 import { rateLimitResponse } from "@/lib/rate-limit";
 import { getUserIdFromRequest } from "@/lib/request-auth";
 import { z } from "zod";
@@ -26,6 +27,7 @@ const syncItemSchema = z.object({
     ])
     .optional()
     .default("Accepted"),
+  code: z.string().max(100_000).optional(),
   url: z.string().url().optional(),
   submittedAt: z.string().datetime().optional(),
 });
@@ -103,6 +105,7 @@ export async function POST(request: Request) {
           difficulty: item.difficulty,
           language: item.language,
           status: item.status,
+          code: item.code ?? null,
           url: item.url ?? `https://leetcode.com/problems/${item.titleSlug}/`,
           submittedAt: item.submittedAt ? new Date(item.submittedAt) : new Date(),
         })),
@@ -112,6 +115,25 @@ export async function POST(request: Request) {
 
     await recalculateUserStats(userId);
     await recalculateReviewsFromHistory(userId);
+
+    // Commit newly-synced accepted solutions to the user's GitHub repo.
+    // Fire-and-forget: repo sync must never fail the sync response.
+    const toCommit = toCreate
+      .filter((item) => item.status === "Accepted" && item.code)
+      .map((item) => ({
+        problemName: item.problemName,
+        titleSlug: item.titleSlug,
+        difficulty: item.difficulty,
+        language: item.language,
+        runtime: null,
+        memory: null,
+        code: item.code ?? null,
+        url: item.url ?? `https://leetcode.com/problems/${item.titleSlug}/`,
+        submittedAt: item.submittedAt ? new Date(item.submittedAt) : new Date(),
+      }));
+    if (toCommit.length > 0) {
+      commitManyToGitHub(userId, toCommit).catch(console.error);
+    }
 
     return NextResponse.json({
       success: true,

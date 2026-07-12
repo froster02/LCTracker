@@ -77,6 +77,9 @@ function collectAcceptedSubmissions(start, end, pageSize, pageDelayMs) {
         difficulty: diffMap[slug] || "Medium",
         language: sub.lang || "Unknown",
         status: "Accepted",
+        // LeetCode's submission list includes the solution source; pass it
+        // through so the server can commit it to the user's GitHub repo.
+        ...(sub.code ? { code: String(sub.code).slice(0, 100000) } : {}),
         url: `https://leetcode.com/problems/${slug}/`,
         submittedAt: new Date(sub.timestamp * 1000).toISOString(),
       });

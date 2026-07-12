@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { submissionSchema } from "@/lib/schemas";
 import { recalculateUserStats } from "@/lib/stats";
 import { upsertReviewOnAccepted } from "@/lib/reviews";
+import { commitSolutionToGitHub } from "@/lib/github-sync";
 import { rateLimitResponse } from "@/lib/rate-limit";
 import { getUserIdFromRequest } from "@/lib/request-auth";
 
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
         memory: data.memory ?? null,
         status: data.status,
         codeLength: data.codeLength ?? null,
+        code: data.code ?? null,
         url: data.url,
         submittedAt,
       },
@@ -85,6 +87,18 @@ export async function POST(request: Request) {
         problemName: data.problemName,
         titleSlug: data.titleSlug,
         difficulty: data.difficulty,
+        url: data.url,
+        submittedAt,
+      }).catch(console.error);
+
+      commitSolutionToGitHub(userId, {
+        problemName: data.problemName,
+        titleSlug: data.titleSlug,
+        difficulty: data.difficulty,
+        language: data.language,
+        runtime: data.runtime ?? null,
+        memory: data.memory ?? null,
+        code: data.code ?? null,
         url: data.url,
         submittedAt,
       }).catch(console.error);

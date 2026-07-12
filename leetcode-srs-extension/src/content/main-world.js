@@ -9,9 +9,22 @@ export const BRIDGE_SOURCE = "lcg-interceptor";
 function isSubmissionRequest(urlStr, body) {
   return (
     urlStr.includes("leetcode.com") &&
-    urlStr.includes("/graphql/") &&
-    (body.includes("submit") || body.includes("checkSubmission"))
+    ((urlStr.includes("/graphql/") &&
+      (body.includes("submit") || body.includes("checkSubmission"))) ||
+      /\/problems\/[^/]+\/submit\/?/.test(urlStr))
   );
+}
+
+// Pull the user's typed solution out of the submit request body. LeetCode
+// submits either via REST (/problems/{slug}/submit/, body.typed_code) or
+// GraphQL (variables.typedCode) depending on site version.
+function extractTypedCode(body) {
+  try {
+    const parsed = JSON.parse(body);
+    return parsed.typed_code ?? parsed.variables?.typedCode ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function installMainWorldInterceptor() {
@@ -24,13 +37,17 @@ export function installMainWorldInterceptor() {
     const body = init?.body?.toString() ?? "";
 
     if (isSubmissionRequest(urlStr, body)) {
+      const typedCode = extractTypedCode(body);
       try {
         const response = await originalFetch.apply(this, args);
         const clone = response.clone();
         clone.text().then((text) => {
           try {
             const data = JSON.parse(text);
-            window.postMessage({ source: BRIDGE_SOURCE, data }, window.location.origin);
+            window.postMessage(
+              { source: BRIDGE_SOURCE, data, typedCode },
+              window.location.origin
+            );
           } catch {}
         }).catch(() => {});
         return response;

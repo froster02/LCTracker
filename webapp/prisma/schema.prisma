@@ -13,6 +13,8 @@ model User {
   name          String?
   image         String?
   githubId      String?   @unique
+  githubLogin   String?   @map("github_login")
+  githubAccessToken String? @map("github_access_token") // AES-256-GCM encrypted, see lib/crypto.ts
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -37,6 +39,7 @@ model Submission {
   memory        Int?      // MB
   status        String
   codeLength    Int?      @map("code_length")
+  code          String?   @db.Text
   url           String
   submittedAt   DateTime  @default(now()) @map("submitted_at")
 

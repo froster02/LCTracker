@@ -18,6 +18,7 @@ function renderAuth(state, els) {
 
   els.signInBtn.classList.toggle("hidden", signedIn);
   els.signInBtn.disabled = signingIn;
+  els.signInHint?.classList.toggle("hidden", signedIn);
   els.signOutBtn.classList.toggle("hidden", !signedIn);
   els.trackingSection.classList.toggle("hidden", !signedIn);
 }

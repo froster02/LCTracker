@@ -2,6 +2,14 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
+import { encrypt } from "@/lib/crypto";
+
+// GitHub returns a null email when the user's email is private
+function githubEmail(profile: Record<string, unknown> | null | undefined): string {
+  return (
+    (profile?.email as string | null) || `${profile?.id}@users.noreply.github.com`
+  );
+}
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -43,30 +51,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
       authorization: {
-        params: { scope: "read:user user:email" },
+        // `repo` is required to create the user's leetcode-galaxy repo and
+        // commit accepted solutions to it (see lib/github-sync.ts)
+        params: { scope: "read:user user:email repo" },
       },
     }),
   ],
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === "github") {
-        // GitHub may return null email if private; fall back to noreply address
-        const email =
-          (profile?.email as string | null) ||
-          `${profile?.id}@users.noreply.github.com`;
+        const email = githubEmail(profile);
+        const shared = {
+          name: (profile?.name as string | null) || (profile?.login as string | null),
+          image: (profile?.avatar_url || profile?.image || null) as string | null,
+          githubId: String(profile?.id),
+          githubLogin: (profile?.login as string | null) ?? null,
+          // stored encrypted; used server-side to commit solutions to the user's repo
+          githubAccessToken: account.access_token ? await encrypt(account.access_token) : null,
+        };
         const user = await prisma.user.upsert({
           where: { email },
-          update: {
-            name: (profile?.name as string | null) || (profile?.login as string | null),
-            image: (profile?.avatar_url || profile?.image || null) as string | null,
-            githubId: String(profile?.id),
-          },
-          create: {
-            email,
-            name: (profile?.name as string | null) || (profile?.login as string | null),
-            image: (profile?.avatar_url || profile?.image || null) as string | null,
-            githubId: String(profile?.id),
-          },
+          update: shared,
+          create: { email, ...shared },
         });
         await prisma.userStat.upsert({
           where: { userId: user.id },
@@ -76,12 +82,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.sub = user.id;
-      }
+    async jwt({ token, user, account, profile }) {
       if (account?.provider === "github") {
+        // user.id here is the GitHub numeric id, not our cuid — resolve the DB id
+        const dbUser = await prisma.user.findUnique({
+          where: { email: githubEmail(profile) },
+          select: { id: true },
+        });
+        if (dbUser) token.sub = dbUser.id;
         token.accessToken = account.access_token;
+      } else if (user) {
+        // credentials dev provider returns the DB id directly
+        token.sub = user.id;
       }
       return token;
     },

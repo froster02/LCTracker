@@ -9,6 +9,7 @@ const els = {
   authStatus: document.getElementById("authStatus"),
   authText: document.getElementById("authText"),
   signInBtn: document.getElementById("signInBtn"),
+  signInHint: document.getElementById("signInHint"),
   signOutBtn: document.getElementById("signOutBtn"),
   trackingSection: document.getElementById("trackingSection"),
   queueStatus: document.getElementById("queueStatus"),
