@@ -25,6 +25,7 @@ export async function GET(request: Request) {
         url: true,
         stage: true,
         mastered: true,
+        note: true,
         firstSolvedAt: true,
         lastSolvedAt: true,
         nextReviewAt: true,

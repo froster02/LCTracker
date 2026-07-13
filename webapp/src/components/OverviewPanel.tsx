@@ -26,7 +26,12 @@ interface StatsResponse {
   acceptedSubmissions: number;
 }
 
-export function OverviewPanel() {
+interface OverviewPanelProps {
+  dueCount?: number;
+  onGoToReviews?: () => void;
+}
+
+export function OverviewPanel({ dueCount = 0, onGoToReviews }: OverviewPanelProps) {
   const [statsData, setStatsData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +59,20 @@ export function OverviewPanel() {
 
   return (
     <div className="space-y-6">
+      {dueCount > 0 && onGoToReviews && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/25 bg-primary/10 px-4 py-3">
+          <p className="text-sm font-medium">
+            <span aria-hidden>⏰ </span>
+            {dueCount} review{dueCount > 1 ? "s" : ""} due today
+          </p>
+          <button
+            onClick={onGoToReviews}
+            className="rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground glow-amber-hover active:scale-[0.98]"
+          >
+            Review now →
+          </button>
+        </div>
+      )}
       <StatsCards
         stats={statsData?.stats ?? null}
         totalSubmissions={statsData?.totalSubmissions ?? 0}

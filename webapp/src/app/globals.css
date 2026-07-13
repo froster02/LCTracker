@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-space-grotesk);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -83,38 +83,39 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Minimalist Dark — layered slate (#0A0A0F → #12121A → #1A1A24) + warm amber accent */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0a0a0f;
+  --foreground: #fafafa;
+  --card: rgba(26, 26, 36, 0.6);
+  --card-foreground: #fafafa;
+  --popover: #1a1a24;
+  --popover-foreground: #fafafa;
+  --primary: #f59e0b;
+  --primary-foreground: #0a0a0f;
+  --secondary: #1a1a24;
+  --secondary-foreground: #fafafa;
+  --muted: #1a1a24;
+  --muted-foreground: #8b8b96;
+  --accent: rgba(245, 158, 11, 0.15);
+  --accent-foreground: #f59e0b;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #f59e0b;
+  --chart-1: #f59e0b;
+  --chart-2: #fbbf24;
+  --chart-3: #71717a;
+  --chart-4: #52525b;
+  --chart-5: #3f3f46;
+  --sidebar: #12121a;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #0a0a0f;
+  --sidebar-accent: #1a1a24;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #f59e0b;
 }
 
 @layer base {
@@ -127,4 +128,67 @@
   html {
     @apply font-sans;
   }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading), var(--font-geist-sans), sans-serif;
+    letter-spacing: -0.025em;
+  }
+}
+
+/* ————— Minimalist Dark atmosphere ————— */
+
+/* Glass-effect surface (cards already pick up the translucent --card token;
+   this adds the blur + hover affordance for containers that want it) */
+.glass {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.dark [data-slot="card"] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 300ms ease-out, background-color 300ms ease-out;
+}
+.dark [data-slot="card"]:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Ambient orbs — fixed, blurred amber light bleeding through the dark */
+.ambient-orb {
+  position: fixed;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(120px);
+  display: none;
+}
+.dark .ambient-orb {
+  display: block;
+}
+.ambient-orb--top {
+  top: -12rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rem;
+  height: 24rem;
+  background: rgba(245, 158, 11, 0.05);
+}
+.ambient-orb--bottom {
+  bottom: -10rem;
+  right: -8rem;
+  width: 32rem;
+  height: 20rem;
+  background: rgba(245, 158, 11, 0.04);
+}
+@media (max-width: 640px) {
+  .ambient-orb--top { width: 24rem; height: 16rem; }
+  .ambient-orb--bottom { width: 18rem; height: 12rem; }
+}
+
+/* Amber glow affordances */
+.glow-amber-hover {
+  transition: box-shadow 200ms ease-out, filter 200ms ease-out;
+}
+.glow-amber-hover:hover {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+  filter: brightness(1.08);
 }

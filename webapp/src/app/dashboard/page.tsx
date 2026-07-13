@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { OverviewPanel } from "@/components/OverviewPanel";
 import { HistoryTable } from "@/components/HistoryTable";
@@ -8,8 +8,8 @@ import { ReviewsPanel } from "@/components/ReviewsPanel";
 import { useSession, signIn } from "next-auth/react";
 
 const TABS = [
-  { key: "overview", label: "Overview" },
   { key: "reviews", label: "Reviews" },
+  { key: "overview", label: "Overview" },
   { key: "history", label: "History" },
 ] as const;
 
@@ -17,13 +17,22 @@ type TabKey = (typeof TABS)[number]["key"];
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [tab, setTab] = useState<TabKey>("overview");
-  const [visited, setVisited] = useState<Set<TabKey>>(new Set(["overview"]));
+  const [tab, setTab] = useState<TabKey>("reviews");
+  const [visited, setVisited] = useState<Set<TabKey>>(new Set(["reviews"]));
+  const [dueCount, setDueCount] = useState(0);
 
   const selectTab = (key: TabKey) => {
     setTab(key);
     setVisited((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
   };
+
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/reviews/due")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => setDueCount(json?.count ?? 0))
+      .catch(() => {});
+  }, [session?.user]);
 
   if (!session?.user) {
     return (
@@ -36,7 +45,7 @@ export default function DashboardPage() {
           </p>
           <button
             onClick={() => signIn("github")}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 glow-amber-hover active:scale-[0.98]"
           >
             Sign in with GitHub
           </button>
@@ -48,9 +57,9 @@ export default function DashboardPage() {
   return (
     <>
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Welcome back, {session.user.name?.split(" ")[0] ?? "Coder"}
           </p>
@@ -63,21 +72,30 @@ export default function DashboardPage() {
               role="tab"
               aria-selected={tab === t.key}
               onClick={() => selectTab(t.key)}
-              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+              className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors active:scale-[0.98] ${
                 tab === t.key
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {t.label}
+              {t.key === "reviews" && dueCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                  {dueCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
         {/* Panels stay mounted once visited so switching tabs doesn't
             re-fetch or lose scroll position — just toggled with `hidden`. */}
-        <div hidden={tab !== "overview"}>{visited.has("overview") && <OverviewPanel />}</div>
         <div hidden={tab !== "reviews"}>{visited.has("reviews") && <ReviewsPanel />}</div>
+        <div hidden={tab !== "overview"}>
+          {visited.has("overview") && (
+            <OverviewPanel dueCount={dueCount} onGoToReviews={() => selectTab("reviews")} />
+          )}
+        </div>
         <div hidden={tab !== "history"}>{visited.has("history") && <HistoryTable />}</div>
       </main>
     </>

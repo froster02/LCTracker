@@ -33,6 +33,10 @@ export function ReviewsPanel() {
 
   const pipelineItems = reviews.map((r) => ({ stage: r.mastered ? 3 : r.stage }));
 
+  const handleNoteSaved = (id: string, note: string | null) => {
+    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, note } : r)));
+  };
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
@@ -42,7 +46,7 @@ export function ReviewsPanel() {
         <ReviewQueue reviews={reviews} />
         <StagePipeline problems={pipelineItems} />
       </div>
-      <ReviewScheduleTable reviews={reviews} />
+      <ReviewScheduleTable reviews={reviews} onNoteSaved={handleNoteSaved} />
     </div>
   );
 }
