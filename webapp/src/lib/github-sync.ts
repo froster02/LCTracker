@@ -2,12 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
 
 // Commits accepted LeetCode solutions to the user's own GitHub repo
-// (github.com/{login}/leetcode-galaxy). GitHub is the user-owned home for
+// (github.com/{login}/leettracker02). GitHub is the user-owned home for
 // solutions; Postgres remains the query index for the dashboard. Every
 // function here is best-effort: callers fire-and-forget and a GitHub failure
 // must never block submission ingest.
 
-const REPO_NAME = "leetcode-galaxy";
+const REPO_NAME = "leettracker02";
 const API = "https://api.github.com";
 
 const LANG_EXT: Record<string, string> = {
@@ -81,7 +81,7 @@ async function ensureRepo(token: string, login: string): Promise<boolean> {
   const create = await gh(token, "POST", "/user/repos", {
     name: REPO_NAME,
     description:
-      "My LeetCode solutions, auto-committed by LeetCode Galaxy 🌌",
+      "My LeetCode solutions, auto-committed by LeetTracker02 🚀",
     private: true,
     auto_init: true,
   });
@@ -135,7 +135,7 @@ function metadataReadme(sub: SubmissionForSync): string {
     `| Solved on | ${date} |`,
     `| Problem | [leetcode.com/problems/${sub.titleSlug}](${sub.url}) |`,
     "",
-    `_Auto-committed by [LeetCode Galaxy](https://lctracker-webapp.vercel.app)._`,
+    `_Auto-committed by [LeetTracker02](https://lctracker-webapp.vercel.app)._`,
     "",
   ].join("\n");
 }

@@ -7,7 +7,7 @@ export function sendSubmission(details) {
     details.problemName.includes("SRS Test") ||
     details.titleSlug.startsWith("srs-")
   ) {
-    console.log("[LeetCode Galaxy] Ignoring test submission:", details.problemName);
+    console.log("[LeetTracker02] Ignoring test submission:", details.problemName);
     return;
   }
 
@@ -16,7 +16,7 @@ export function sendSubmission(details) {
 
   chrome.runtime.sendMessage({ action: ACTIONS.SUBMISSION_CAPTURED, payload: details }, () => {
     if (chrome.runtime.lastError) {
-      console.warn("[LeetCode Galaxy] Background unavailable:", chrome.runtime.lastError.message);
+      console.warn("[LeetTracker02] Background unavailable:", chrome.runtime.lastError.message);
     }
     markProcessed();
   });

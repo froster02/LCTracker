@@ -22,7 +22,7 @@ export async function checkDueReviews() {
 
   const res = await apiGet("/api/reviews/due", auth.apiKey);
   if (!res.ok) {
-    console.warn("[LeetCode Galaxy] Due-reviews check failed:", res.status);
+    console.warn("[LeetTracker02] Due-reviews check failed:", res.status);
     return;
   }
 

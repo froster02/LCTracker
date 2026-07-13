@@ -17,7 +17,7 @@ export function computeBackoffDelay(attempts) {
 export async function enqueueSubmission(payload) {
   const problems = validateSubmission(payload);
   if (problems.length > 0) {
-    console.warn("[LeetCode Galaxy] Rejected invalid submission payload:", problems, payload);
+    console.warn("[LeetTracker02] Rejected invalid submission payload:", problems, payload);
     return;
   }
 
@@ -31,7 +31,7 @@ export async function enqueueSubmission(payload) {
   };
   queue.push(item);
   await setQueue(queue);
-  console.log("[LeetCode Galaxy] Enqueued submission:", payload.problemName);
+  console.log("[LeetTracker02] Enqueued submission:", payload.problemName);
 
   processQueue().catch(console.error);
 }
@@ -53,7 +53,7 @@ export async function processQueue() {
 async function _processQueueInner() {
   const auth = await getAuth();
   if (!auth.apiKey) {
-    console.log("[LeetCode Galaxy] No auth, skipping queue processing");
+    console.log("[LeetTracker02] No auth, skipping queue processing");
     return;
   }
 
@@ -80,13 +80,13 @@ async function _processQueueInner() {
       if (res.ok) {
         const data = await res.json();
         if (data.duplicate) {
-          console.log("[LeetCode Galaxy] Duplicate submission skipped:", item.payload.problemName);
+          console.log("[LeetTracker02] Duplicate submission skipped:", item.payload.problemName);
         } else {
-          console.log("[LeetCode Galaxy] Submission synced:", item.payload.problemName);
+          console.log("[LeetTracker02] Submission synced:", item.payload.problemName);
         }
         processedIds.push(item.id);
       } else if (res.status === 401) {
-        console.warn("[LeetCode Galaxy] Auth expired during queue processing");
+        console.warn("[LeetTracker02] Auth expired during queue processing");
         await setAuth({ apiKey: null, userId: null, expiresAt: null });
         notify({ action: ACTIONS.AUTH_EXPIRED });
         authExpired = true;
@@ -94,12 +94,12 @@ async function _processQueueInner() {
       } else {
         item.attempts++;
         item.lastAttempt = Date.now();
-        console.warn("[LeetCode Galaxy] Submission failed, will retry:", res.status, item.payload.problemName);
+        console.warn("[LeetTracker02] Submission failed, will retry:", res.status, item.payload.problemName);
       }
     } catch (error) {
       item.attempts++;
       item.lastAttempt = Date.now();
-      console.warn("[LeetCode Galaxy] Network error, will retry:", item.payload.problemName, error);
+      console.warn("[LeetTracker02] Network error, will retry:", item.payload.problemName, error);
     }
   }
 

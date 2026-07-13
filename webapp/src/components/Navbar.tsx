@@ -14,7 +14,7 @@ export function Navbar() {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <Link href="/" className="text-sm font-bold tracking-tight">
-          LeetCode Galaxy
+          LeetTracker02
         </Link>
 
         {user ? (

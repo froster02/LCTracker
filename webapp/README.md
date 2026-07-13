@@ -1,6 +1,6 @@
-# LeetCode Galaxy — Webapp
+# LeetTracker02 — Webapp
 
-Next.js 16 dashboard + API for [LeetCode Galaxy](../README.md). See the root README for the full picture (features, self-hosting, architecture).
+Next.js 16 dashboard + API for [LeetTracker02](../README.md). See the root README for the full picture (features, self-hosting, architecture).
 
 ## Dev
 

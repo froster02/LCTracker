@@ -136,7 +136,7 @@ export async function syncHistoryFromLeetCode(tabId, startDate, endDate) {
         return;
       }
       if (!res.ok) {
-        console.error("[LeetCode Galaxy] Batch sync failed:", res.status);
+        console.error("[LeetTracker02] Batch sync failed:", res.status);
         reportProgress("error", { error: `Batch sync failed: ${res.status}` });
         return;
       }
@@ -147,7 +147,7 @@ export async function syncHistoryFromLeetCode(tabId, startDate, endDate) {
     await setLastSync(Date.now());
     reportProgress("complete", { synced: problems.length });
   } catch (error) {
-    console.error("[LeetCode Galaxy] History sync error:", error);
+    console.error("[LeetTracker02] History sync error:", error);
     reportProgress("error", { error: error.message });
   }
 }

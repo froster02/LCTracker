@@ -18,7 +18,7 @@ export function registerAlarms() {
   });
 
   self.addEventListener("online", () => {
-    console.log("[LeetCode Galaxy] Network online, processing queue...");
+    console.log("[LeetTracker02] Network online, processing queue...");
     processQueue().catch(console.error);
   });
 

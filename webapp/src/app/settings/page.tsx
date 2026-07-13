@@ -48,7 +48,7 @@ export default function SettingsPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Account</CardTitle>
-            <CardDescription>Your LeetCode Galaxy account details.</CardDescription>
+            <CardDescription>Your LeetTracker02 account details.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between py-2 border-b">
@@ -83,12 +83,12 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-muted-foreground">Repository</span>
                   <a
-                    href={`https://github.com/${github.githubLogin}/leetcode-galaxy`}
+                    href={`https://github.com/${github.githubLogin}/leettracker02`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-sm font-medium underline underline-offset-2"
                   >
-                    {github.githubLogin}/leetcode-galaxy
+                    {github.githubLogin}/leettracker02
                   </a>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">
                 Repo sync is not active yet. Sign out and sign back in with GitHub to
                 grant repository access — after that, every accepted solution is
-                committed to <code>leetcode-galaxy</code> on your account.
+                committed to <code>leettracker02</code> on your account.
               </p>
             )}
           </CardContent>
@@ -110,13 +110,13 @@ export default function SettingsPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Chrome Extension</CardTitle>
-            <CardDescription>Install the LeetCode Galaxy extension to auto-track submissions.</CardDescription>
+            <CardDescription>Install the LeetTracker02 extension to auto-track submissions.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border p-4">
               <h3 className="mb-2 text-sm font-medium">Setup Instructions</h3>
               <ol className="ml-4 list-decimal space-y-2 text-sm text-muted-foreground">
-                <li>Install the LeetCode Galaxy Chrome Extension from the Chrome Web Store (or load it unpacked in developer mode).</li>
+                <li>Install the LeetTracker02 Chrome Extension from the Chrome Web Store (or load it unpacked in developer mode).</li>
                 <li>Click the extension icon and sign in with GitHub.</li>
                 <li>The extension will automatically detect and track your LeetCode submissions.</li>
                 <li>Visit your Dashboard to see rich analytics and progress.</li>

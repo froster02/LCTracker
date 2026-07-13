@@ -4,4 +4,4 @@ import { installDomWatcher } from "./dom-watcher.js";
 installInterceptorBridge();
 installDomWatcher();
 
-console.log("[LeetCode Galaxy] Content script loaded and monitoring submissions.");
+console.log("[LeetTracker02] Content script loaded and monitoring submissions.");

@@ -1,11 +1,11 @@
 {
-  "name": "leetcode-galaxy-extension",
+  "name": "leettracker02-extension",
   "version": "3.0.0",
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
     "watch": "node scripts/build.js --watch",
-    "zip": "node scripts/build.js --prod && cd dist && zip -r ../leetcode-galaxy.zip ."
+    "zip": "node scripts/build.js --prod && cd dist && zip -r ../leettracker02.zip ."
   },
   "devDependencies": {
     "esbuild": "^0.24.0"

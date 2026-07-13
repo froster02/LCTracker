@@ -1,4 +1,4 @@
-# LeetCode Galaxy — Deployment Guide
+# LeetTracker02 — Deployment Guide
 
 ## 1. Database Setup (Neon recommended)
 
@@ -19,7 +19,7 @@ npx prisma generate
 4. Register → copy **Client ID** → generate a **Client Secret** (copy it immediately; shown once)
 
 Notes:
-- The app requests `read:user user:email repo` scope. `repo` is what lets it create the user's `leetcode-galaxy` repo and commit accepted solutions to it.
+- The app requests `read:user user:email repo` scope. `repo` is what lets it create the user's `leettracker02` repo and commit accepted solutions to it.
 - The extension needs **no OAuth config** — it authenticates through a webapp tab (`/auth/extension`) and receives an API key via `externally_connectable` messaging.
 
 ## 3. Vercel Deployment
@@ -54,7 +54,7 @@ PROD_API_BASE=https://your-domain.vercel.app node scripts/build.js --prod
 ```
 
 ### Chrome Web Store
-1. `npm run zip` → upload `leetcode-galaxy.zip` at the [Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
+1. `npm run zip` → upload `leettracker02.zip` at the [Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
 2. Fill in listing, submit for review
 
 ## 5. Post-Deployment Checklist
@@ -63,7 +63,7 @@ PROD_API_BASE=https://your-domain.vercel.app node scripts/build.js --prod
 - [ ] GitHub sign-in works on dashboard (`/auth/signin`)
 - [ ] Extension popup sign-in opens `/auth/extension`, connects, popup shows "Signed in"
 - [ ] Submit a LeetCode problem → appears in dashboard History
-- [ ] Accepted solution committed to `github.com/<you>/leetcode-galaxy`
+- [ ] Accepted solution committed to `github.com/<you>/leettracker02`
 - [ ] Stats/heatmap/streaks update
 - [ ] Reviews tab shows the new problem at stage 0 (due +7 days)
 - [ ] History sync imports a date range; re-running it creates 0 duplicates

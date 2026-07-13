@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LeetCode Galaxy — Track & Analyze Your LeetCode Journey",
+  title: "LeetTracker02 — Track & Analyze Your LeetCode Journey",
   description: "Automatically track LeetCode submissions, visualize your progress with rich analytics, and build a consistent coding habit.",
 };
 

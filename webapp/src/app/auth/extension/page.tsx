@@ -69,8 +69,8 @@ function ExtensionAuthContent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 px-4 text-center">
-        <div className="text-3xl">🌌</div>
-        <h1 className="text-xl font-bold">LeetCode Galaxy</h1>
+        <div className="text-3xl">🚀</div>
+        <h1 className="text-xl font-bold">LeetTracker02</h1>
 
         {status === "loading" && (
           <p className="text-sm text-muted-foreground">Loading…</p>

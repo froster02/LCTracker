@@ -85,7 +85,7 @@ export async function ensureAuth() {
         return newAuth.apiKey;
       }
     } catch (e) {
-      console.warn("[LeetCode Galaxy] Refresh failed, will re-auth:", e);
+      console.warn("[LeetTracker02] Refresh failed, will re-auth:", e);
     }
   }
 

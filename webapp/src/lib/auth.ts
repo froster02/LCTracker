@@ -51,7 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
       authorization: {
-        // `repo` is required to create the user's leetcode-galaxy repo and
+        // `repo` is required to create the user's leettracker02 repo and
         // commit accepted solutions to it (see lib/github-sync.ts)
         params: { scope: "read:user user:email repo" },
       },

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-LeetCode Galaxy: a Chrome extension that auto-detects LeetCode submissions and a Next.js web dashboard that visualizes them (streaks, difficulty breakdown, heatmap, spaced-repetition review schedule). Two independent apps in one repo, connected only over HTTP:
+LeetTracker02: a Chrome extension that auto-detects LeetCode submissions and a Next.js web dashboard that visualizes them (streaks, difficulty breakdown, heatmap, spaced-repetition review schedule). Two independent apps in one repo, connected only over HTTP:
 
 - `leetcode-srs-extension/` — Manifest V3 extension, vanilla JS bundled with esbuild.
 - `webapp/` — Next.js 16 (App Router) + TypeScript + Prisma/PostgreSQL, deployed to Vercel.

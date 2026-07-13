@@ -1,4 +1,4 @@
-# LeetCode Galaxy — Architecture & Implementation Plan
+# LeetTracker02 — Architecture & Implementation Plan
 
 > Production-ready SaaS for tracking LeetCode submissions with a Chrome Extension + Web Dashboard.
 
@@ -179,7 +179,7 @@ model ContestParticipation {
 ### GitHub Solution Sync
 - On every **Accepted** submission carrying code, the server commits
   `{Difficulty}/{titleSlug}/solution.{ext}` + a metadata README to the user's
-  `leetcode-galaxy` repo (created private on first use) using the stored
+   `leettracker02` repo (created private on first use) using the stored
   encrypted token. Fire-and-forget: repo failures never block ingest.
 
 ### Token Refresh Strategy

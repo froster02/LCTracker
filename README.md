@@ -1,46 +1,57 @@
-# LeetCode Galaxy 🌌
+# LeetTracker02 🚀
 
 **Solve on LeetCode. See your progress on a beautiful dashboard. Get every accepted solution committed to your own GitHub repo — automatically.**
 
-## 🚀 Set up the extension (5 minutes)
+---
 
-1. **Clone & build**
-   ```bash
-   git clone https://github.com/froster02/leetcode-galaxy.git
-   cd leetcode-galaxy/leetcode-srs-extension
-   npm install
-   npm run build        # or: node scripts/build.js --prod  (points at the live app)
-   ```
-2. **Load it in Chrome**
-   - Open `chrome://extensions`
-   - Turn on **Developer mode** (top-right toggle)
-   - Click **Load unpacked** → select the **`leetcode-srs-extension/dist/`** folder (not the repo root)
-   - The **LeetTracker02** icon appears in your toolbar
-3. **Sign in on the dashboard first**
-   - Go to [lctracker-webapp.vercel.app](https://lctracker-webapp.vercel.app) → **Sign in with GitHub** → authorize
-   - The `repo` permission lets the app create your private `leetcode-galaxy` solutions repo
-4. **Connect the extension**
-   - Click the LeetTracker02 icon → **Sign in with GitHub**
-   - A tab opens, connects the extension to your account, and closes itself
-   - Popup now shows **Signed in** ✅
-5. **Import your history (optional)**
-   - In the popup, pick a date range → **Sync History**
-   - Past accepted solutions land on your dashboard and in your GitHub repo
-6. **Solve something**
-   - Submit any problem on leetcode.com — it appears on your dashboard within seconds, and accepted solutions are committed to `github.com/you/leetcode-galaxy`
+## 🎯 How to Track and Revise Questions
 
-> Reload the extension (`chrome://extensions` → ⟳) after rebuilding, and refresh any open leetcode.com tabs.
+### 1. Set up the Chrome Extension (5 minutes)
+* **Build locally**: Run the following commands to install dependencies and compile the extension:
+  ```bash
+  cd leetcode-srs-extension
+  npm install
+  npm run build
+  ```
+  *(This will generate the compiled `dist/` directory which Chrome needs)*
+* **Load it in Chrome**:
+  * Open `chrome://extensions` in your browser.
+  * Turn on **Developer mode** (the toggle in the top-right corner).
+  * Click **Load unpacked** (top-left button) and select the **`leetcode-srs-extension/dist/`** folder (do not select the repository root).
+  * The **LeetTracker02** icon will now appear in your extension toolbar.
+
+### 2. Connect Your Account
+* **Sign in on the Dashboard**: Go to [lctracker-webapp.vercel.app](https://lctracker-webapp.vercel.app) → **Sign in with GitHub** → authorize.
+  * *The `repo` permission is what allows the app to automatically create your private backup repository on GitHub.*
+* **Connect the Extension**:
+  * Click the LeetTracker02 icon in your toolbar → **Sign in with GitHub**.
+  * A browser tab opens automatically, completes the secure connection, and closes itself.
+  * The extension popup will now show **Signed in** ✅.
+
+### 3. Track and Revise Questions
+* **Auto-Track Submissions**:
+  * Submit any problem on leetcode.com. The moment it gets accepted, the extension captures it and:
+    * Updates your Web Dashboard instantly (updates streaks, heatmaps, and total counts).
+    * Commits the solution code to your private **`leettracker02`** repository on GitHub (includes runtime, memory, and code details).
+* **Spaced-Repetition Reviews (Revising)**:
+  * Solved problems are automatically scheduled for review at **7 days**, **14 days**, and **21 days**.
+  * When a problem is due, it appears in the **Reviews** tab on your dashboard.
+  * Click the problem to open it, solve it again on LeetCode, and submit. The extension will automatically detect it and advance its review stage. (If you miss the review window, the schedule resets).
 
 ---
 
-LeetCode Galaxy is the **LeetTracker02** Chrome extension + a web dashboard that tracks your LeetCode journey with zero manual work:
+## 📊 Features
+
+LeetTracker02 is a Chrome extension + a web dashboard that tracks your LeetCode journey with zero manual work:
 
 - 🔍 **Auto-detects submissions** the moment you hit Submit on leetcode.com
 - 📊 **Dashboard analytics** — activity heatmap, streaks, difficulty breakdown, language usage, performance trends
-- 🐙 **GitHub solution backup** — every accepted solution is committed to `github.com/you/leetcode-galaxy` (LeetHub-style, with code + metadata)
+- 🐙 **GitHub solution backup** — every accepted solution is committed to `github.com/you/leettracker02` (LeetHub-style, with code + metadata)
 - 🔁 **Spaced-repetition reviews** — solved problems come back for review at 7 / 14 / 21 days so they actually stick
 - 📦 **History import** — bulk-sync your past LeetCode submissions by date range
 - 📴 **Offline queue** — submissions made offline are queued and retried automatically
+
+---
 
 ## How it works (end-to-end)
 
@@ -48,22 +59,18 @@ LeetCode Galaxy is the **LeetTracker02** Chrome extension + a web dashboard that
 2. **Install the LeetTracker02 extension** and click *Sign in with GitHub* in its popup. A tab opens, connects the extension to your account, and closes itself.
 3. **Solve a problem** on leetcode.com and submit. The extension captures the result (status, runtime, memory, your code) and sends it to your dashboard.
 4. **Watch the dashboard update** — new history row, heatmap square, streak tick.
-5. **Check your GitHub** — an accepted solution appears as a commit in your `leetcode-galaxy` repo: `Medium/two-sum/solution.py` plus a metadata README.
+5. **Check your GitHub** — an accepted solution appears as a commit in your `leettracker02` repo: `Medium/two-sum/solution.py` plus a metadata README.
 6. **Review on schedule** — the Reviews tab (and an extension notification) tells you when a problem is due for its 7/14/21-day review. Solve it again to advance it; miss the window and it resets.
 
 ### Where is my data?
 
 | Data | Where it lives |
 |------|----------------|
-| Your solution code | **Your own GitHub repo** (`leetcode-galaxy`, private by default — flip it public in repo settings any time) |
+| Your solution code | **Your own GitHub repo** (`leettracker02`, private by default — flip it public in repo settings any time) |
 | Dashboard stats, history, review schedule | The app's Postgres database (used as a fast query index) |
 | Your login | GitHub OAuth — the app never sees a password |
 
-## Install (users)
-
-1. Open the dashboard → sign in with GitHub → authorize (the `repo` permission is what lets it create and commit to *your* `leetcode-galaxy` repo).
-2. Load the **LeetTracker02** extension (Chrome Web Store listing pending; for now: `chrome://extensions` → Developer mode → *Load unpacked* → select the built `leetcode-srs-extension/dist/` folder).
-3. Click the LeetTracker02 icon → *Sign in with GitHub* → done. Solve something!
+---
 
 ## Self-hosting
 
@@ -99,6 +106,8 @@ PROD_API_BASE=https://your-app.vercel.app node scripts/build.js --prod
 ```
 Load `dist/` as an unpacked extension. Also update `manifest.json` → `externally_connectable.matches` to your domain.
 
+---
+
 ## Development
 
 ```bash
@@ -115,6 +124,8 @@ npm run watch      # rebuild on change
 
 Local Postgres: `docker run -d --name lctracker-pg -e POSTGRES_USER=johndoe -e POSTGRES_PASSWORD=randompassword -e POSTGRES_DB=mydb -p 5432:5432 postgres:16-alpine`
 
+---
+
 ## Architecture (short version)
 
 ```
@@ -125,7 +136,9 @@ leetcode.com ──(MAIN-world fetch interceptor)──▶ extension content scr
      │                                      · offline queue + retry
      │                                      · history bulk import
      │                                      · API-key auth
-     ▼                                                    │ x-api-key
+     │                                      · API base definition
+     │                                                    │ x-api-key
+     ▼                                                    │
 GitHub OAuth ◀── webapp (Next.js 16 on Vercel) ◀──────────┘
      │               │
      │               ├─▶ Postgres (Neon): submissions, stats, SRS reviews
@@ -138,6 +151,8 @@ Key details live in [ARCHITECTURE.md](ARCHITECTURE.md); deploy steps in [DEPLOYM
 - Submission detection wraps `window.fetch` in the page's MAIN world (an isolated content script can't see the page's own requests) and relays via `postMessage`.
 - The GitHub token (`repo` scope) is stored AES-256-GCM-encrypted; solution commits are fire-and-forget and never block tracking.
 
+---
+
 ## FAQ
 
 **Why GitHub sign-in?** Your solutions end up in your GitHub — signing in with GitHub gives the app permission to create that repo and commit to it. One identity, no passwords.
@@ -146,7 +161,9 @@ Key details live in [ARCHITECTURE.md](ARCHITECTURE.md); deploy steps in [DEPLOYM
 
 **What if a commit fails?** Tracking still works; repo sync is best-effort. Your submission is always saved to the dashboard first.
 
-**Is my code public?** No — `leetcode-galaxy` is created **private**. Make it public in repo settings whenever you like.
+**Is my code public?** No — `leettracker02` is created **private**. Make it public in repo settings whenever you like.
+
+---
 
 ## License
 
