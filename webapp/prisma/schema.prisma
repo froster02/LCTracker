@@ -65,6 +65,7 @@ model ProblemReview {
   url           String
   stage         Int       @default(0)
   mastered      Boolean   @default(false)
+  note          String?   @db.VarChar(300)
   firstSolvedAt DateTime  @map("first_solved_at")
   lastSolvedAt  DateTime  @map("last_solved_at")
   nextReviewAt  DateTime? @map("next_review_at")

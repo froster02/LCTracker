@@ -47,9 +47,9 @@ export function DifficultyDonut() {
   }
 
   const segments = [
-    { label: "Easy", count: data[0]?.count ?? 0, color: "bg-green-500", pct: ((data[0]?.count ?? 0) / total) * 100 },
-    { label: "Medium", count: data[1]?.count ?? 0, color: "bg-amber-500", pct: ((data[1]?.count ?? 0) / total) * 100 },
-    { label: "Hard", count: data[2]?.count ?? 0, color: "bg-red-500", pct: ((data[2]?.count ?? 0) / total) * 100 },
+    { label: "Easy", count: data[0]?.count ?? 0, color: "bg-lc-easy", pct: ((data[0]?.count ?? 0) / total) * 100 },
+    { label: "Medium", count: data[1]?.count ?? 0, color: "bg-lc-medium", pct: ((data[1]?.count ?? 0) / total) * 100 },
+    { label: "Hard", count: data[2]?.count ?? 0, color: "bg-lc-hard", pct: ((data[2]?.count ?? 0) / total) * 100 },
   ];
 
   return (
@@ -64,8 +64,8 @@ export function DifficultyDonut() {
             style={{
               background: `conic-gradient(${segments.map((s, i) => {
                 const start = segments.slice(0, i).reduce((a, s) => a + s.pct, 0);
-                const hue = s.label === "Easy" ? "142.1 76.2% 36.3%" : s.label === "Medium" ? "37.7 92.1% 50.2%" : "0 72.2% 50.6%";
-                return `hsl(${hue}) ${start}% ${start + s.pct}%`;
+                const hex = s.label === "Easy" ? "#00b8a3" : s.label === "Medium" ? "#ffc01e" : "#ff375f";
+                return `${hex} ${start}% ${start + s.pct}%`;
               }).join(", ")})`,
             }}
           />

@@ -76,14 +76,14 @@ export function PerformanceChart() {
       <CardContent>
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.2)" />
             <XAxis dataKey="name" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
             <YAxis yAxisId="left" tick={{ fontSize: 10 }} label={{ value: "ms", angle: -90, position: "insideLeft", fontSize: 10 }} />
             <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} label={{ value: "MB", angle: 90, position: "insideRight", fontSize: 10 }} />
             <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "12px" }} />
             <Legend wrapperStyle={{ fontSize: "12px" }} />
-            <Line yAxisId="left" type="monotone" dataKey="runtime" name="Runtime (ms)" stroke="#10b981" strokeWidth={2} dot={false} />
-            <Line yAxisId="right" type="monotone" dataKey="memory" name="Memory (MB)" stroke="#3b82f6" strokeWidth={2} dot={false} />
+            <Line yAxisId="left" type="monotone" dataKey="runtime" name="Runtime (ms)" stroke="#ffa116" strokeWidth={2} dot={false} />
+            <Line yAxisId="right" type="monotone" dataKey="memory" name="Memory (MB)" stroke="#00b8a3" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

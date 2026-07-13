@@ -9,7 +9,7 @@ interface LanguageData {
   count: number;
 }
 
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
+const COLORS = ["#ffa116", "#00b8a3", "#ffc01e", "#ff375f", "#8b8b96", "#fbbf24", "#2dd4bf", "#f97316"];
 
 export function LanguageChart() {
   const [data, setData] = useState<LanguageData[]>([]);

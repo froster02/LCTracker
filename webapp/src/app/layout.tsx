@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/SessionProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-const geistSans = Geist({
+const inter = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -26,9 +31,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider>
+          {/* Ambient orbs — atmospheric background light, dark theme only */}
+          <div aria-hidden className="ambient-orb ambient-orb--top" />
+          <div aria-hidden className="ambient-orb ambient-orb--bottom" />
           <AuthSessionProvider>{children}</AuthSessionProvider>
           <Toaster />
         </ThemeProvider>

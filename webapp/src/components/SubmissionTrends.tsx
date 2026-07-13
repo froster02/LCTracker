@@ -70,11 +70,11 @@ export function SubmissionTrends() {
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.2)" />
             <XAxis dataKey="month" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} />
             <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "12px" }} formatter={(value: any) => [`${value} problems`, "Solved"]} />
-            <Bar dataKey="count" name="Problems Solved" fill="#10b981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="count" name="Problems Solved" fill="#ffa116" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

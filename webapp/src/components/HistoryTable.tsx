@@ -27,9 +27,9 @@ interface Pagination {
 }
 
 const DIFFICULTY_COLORS = {
-  Easy: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  Medium: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  Hard: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  Easy: "bg-lc-easy/15 text-lc-easy",
+  Medium: "bg-lc-medium/15 text-lc-medium",
+  Hard: "bg-lc-hard/15 text-lc-hard",
 };
 
 const STATUS_COLORS: Record<string, string> = {

@@ -2,6 +2,37 @@
 
 **Solve on LeetCode. See your progress on a beautiful dashboard. Get every accepted solution committed to your own GitHub repo — automatically.**
 
+## 🚀 Set up the extension (5 minutes)
+
+1. **Clone & build**
+   ```bash
+   git clone https://github.com/froster02/leetcode-galaxy.git
+   cd leetcode-galaxy/leetcode-srs-extension
+   npm install
+   npm run build        # or: node scripts/build.js --prod  (points at the live app)
+   ```
+2. **Load it in Chrome**
+   - Open `chrome://extensions`
+   - Turn on **Developer mode** (top-right toggle)
+   - Click **Load unpacked** → select the **`leetcode-srs-extension/dist/`** folder (not the repo root)
+   - The **LeetTracker02** icon appears in your toolbar
+3. **Sign in on the dashboard first**
+   - Go to [lctracker-webapp.vercel.app](https://lctracker-webapp.vercel.app) → **Sign in with GitHub** → authorize
+   - The `repo` permission lets the app create your private `leetcode-galaxy` solutions repo
+4. **Connect the extension**
+   - Click the LeetTracker02 icon → **Sign in with GitHub**
+   - A tab opens, connects the extension to your account, and closes itself
+   - Popup now shows **Signed in** ✅
+5. **Import your history (optional)**
+   - In the popup, pick a date range → **Sync History**
+   - Past accepted solutions land on your dashboard and in your GitHub repo
+6. **Solve something**
+   - Submit any problem on leetcode.com — it appears on your dashboard within seconds, and accepted solutions are committed to `github.com/you/leetcode-galaxy`
+
+> Reload the extension (`chrome://extensions` → ⟳) after rebuilding, and refresh any open leetcode.com tabs.
+
+---
+
 LeetCode Galaxy is the **LeetTracker02** Chrome extension + a web dashboard that tracks your LeetCode journey with zero manual work:
 
 - 🔍 **Auto-detects submissions** the moment you hit Submit on leetcode.com
