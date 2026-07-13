@@ -7,9 +7,9 @@ import { StageDots } from "@/components/StageDots";
 import type { ReviewItem } from "@/components/ReviewScheduleTable";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
-  Easy: "text-green-600 dark:text-green-400",
-  Medium: "text-amber-600 dark:text-amber-400",
-  Hard: "text-red-600 dark:text-red-400",
+  Easy: "text-lc-easy",
+  Medium: "text-lc-medium",
+  Hard: "text-lc-hard",
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;

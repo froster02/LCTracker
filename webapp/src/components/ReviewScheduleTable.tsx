@@ -138,7 +138,7 @@ export function ReviewScheduleTable({ reviews, onNoteSaved }: Props) {
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs font-medium ${
-                    r.difficulty === "Easy" ? "text-green-600 dark:text-green-400" : r.difficulty === "Medium" ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"
+                    r.difficulty === "Easy" ? "text-lc-easy" : r.difficulty === "Medium" ? "text-lc-medium" : "text-lc-hard"
                   }`}>
                     {r.difficulty}
                   </span>
