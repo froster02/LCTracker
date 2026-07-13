@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const STAGE_LABELS = ["Stage 0", "Stage 1", "Stage 2", "Mastered"];
 const STAGE_COLORS = [
-  "bg-blue-500",
-  "bg-amber-500",
-  "bg-orange-500",
+  "bg-primary/40",
+  "bg-primary/70",
+  "bg-primary",
   "bg-green-500",
 ];
 const STAGE_DESCRIPTIONS = [
