@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
+    "build:prod": "node scripts/build.js --prod",
     "watch": "node scripts/build.js --watch",
     "zip": "node scripts/build.js --prod && cd dist && zip -r ../leettracker02.zip ."
   },
