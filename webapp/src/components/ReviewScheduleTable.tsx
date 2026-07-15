@@ -16,6 +16,8 @@ export interface ReviewItem {
   stage: number;
   mastered: boolean;
   note: string | null;
+  lcNote: string | null;
+  owner: "me" | "friend";
   firstSolvedAt: string;
   lastSolvedAt: string;
   nextReviewAt: string | null;
@@ -51,12 +53,33 @@ function stageDates(item: ReviewItem): string[] {
 interface Props {
   reviews: ReviewItem[];
   onNoteSaved: (id: string, note: string | null) => void;
+  onOwnerChanged: (id: string, owner: "me" | "friend") => void;
 }
 
-export function ReviewScheduleTable({ reviews, onNoteSaved }: Props) {
+export function ReviewScheduleTable({ reviews, onNoteSaved, onOwnerChanged }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  const [ownerSavingId, setOwnerSavingId] = useState<string | null>(null);
+
+  const setOwner = async (r: ReviewItem, owner: "me" | "friend") => {
+    if (r.owner === owner || ownerSavingId) return;
+    setOwnerSavingId(r.id);
+    try {
+      const res = await fetch(`/api/reviews/${r.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      onOwnerChanged(r.id, owner);
+      toast.success(owner === "me" ? "Marked as yours" : "Marked as friend's");
+    } catch {
+      toast.error("Couldn't update owner. Try again.");
+    } finally {
+      setOwnerSavingId(null);
+    }
+  };
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -110,6 +133,7 @@ export function ReviewScheduleTable({ reviews, onNoteSaved }: Props) {
             <th className="px-4 py-3 font-medium">2nd Review (+14d)</th>
             <th className="px-4 py-3 font-medium">3rd Review (+21d)</th>
             <th className="px-4 py-3 font-medium">Status</th>
+            <th className="px-4 py-3 font-medium">Owner</th>
             <th className="min-w-56 px-4 py-3 font-medium">Note</th>
           </tr>
         </thead>
@@ -163,7 +187,39 @@ export function ReviewScheduleTable({ reviews, onNoteSaved }: Props) {
                     <span className="text-xs text-muted-foreground">In progress</span>
                   )}
                 </td>
+                <td className="px-4 py-3">
+                  <div
+                    role="group"
+                    aria-label={`Owner of ${r.problemName}`}
+                    className="flex w-fit rounded-md border p-0.5"
+                  >
+                    {(["me", "friend"] as const).map((o) => (
+                      <button
+                        key={o}
+                        type="button"
+                        aria-pressed={r.owner === o}
+                        disabled={ownerSavingId === r.id}
+                        onClick={() => setOwner(r, o)}
+                        className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+                          r.owner === o
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {o === "me" ? "Mine" : "Friend"}
+                      </button>
+                    ))}
+                  </div>
+                </td>
                 <td className="px-4 py-3 align-top">
+                  {r.lcNote && (
+                    <p
+                      title={r.lcNote}
+                      className="mb-1 max-w-64 truncate text-xs italic text-muted-foreground"
+                    >
+                      LC · {r.lcNote}
+                    </p>
+                  )}
                   {isEditing ? (
                     <div className="space-y-1.5">
                       <Textarea

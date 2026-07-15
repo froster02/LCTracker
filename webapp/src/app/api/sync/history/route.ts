@@ -28,6 +28,7 @@ const syncItemSchema = z.object({
     .optional()
     .default("Accepted"),
   code: z.string().max(100_000).optional(),
+  lcNote: z.string().max(2000).optional(),
   url: z.string().url().optional(),
   submittedAt: z.string().datetime().optional(),
 });
@@ -115,6 +116,21 @@ export async function POST(request: Request) {
 
     await recalculateUserStats(userId);
     await recalculateReviewsFromHistory(userId);
+
+    // Attach imported LeetCode notes to the matching review rows. Uses all
+    // synced items (not just newly created) so a re-sync refreshes notes.
+    // Never touches `note` (dashboard note) or `owner` (manual tag).
+    const withNotes = items.filter((item) => item.lcNote?.trim());
+    for (let i = 0; i < withNotes.length; i += 10) {
+      await Promise.all(
+        withNotes.slice(i, i + 10).map((item) =>
+          prisma.problemReview.updateMany({
+            where: { userId, titleSlug: item.titleSlug },
+            data: { lcNote: item.lcNote!.trim() },
+          })
+        )
+      );
+    }
 
     // Commit newly-synced accepted solutions to the user's GitHub repo.
     // Fire-and-forget: repo sync must never fail the sync response.

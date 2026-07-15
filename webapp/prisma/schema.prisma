@@ -66,6 +66,8 @@ model ProblemReview {
   stage         Int       @default(0)
   mastered      Boolean   @default(false)
   note          String?   @db.VarChar(300)
+  lcNote        String?   @db.Text @map("lc_note") // imported from leetcode.com problem notes
+  owner         String    @default("me") // "me" | "friend" — shared-account tag for review filtering
   firstSolvedAt DateTime  @map("first_solved_at")
   lastSolvedAt  DateTime  @map("last_solved_at")
   nextReviewAt  DateTime? @map("next_review_at")

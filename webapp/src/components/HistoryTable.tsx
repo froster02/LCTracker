@@ -47,6 +47,8 @@ export function HistoryTable() {
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, pages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // titleSlug -> note text (LeetCode note first, dashboard note as fallback)
+  const [noteMap, setNoteMap] = useState<Record<string, string>>({});
 
   const fetchPage = (page: number) => {
     setLoading(true);
@@ -66,6 +68,17 @@ export function HistoryTable() {
 
   useEffect(() => {
     fetchPage(1);
+    fetch("/api/reviews")
+      .then((res) => res.json())
+      .then((json) => {
+        const map: Record<string, string> = {};
+        for (const r of json.reviews ?? []) {
+          const note = r.lcNote || r.note;
+          if (note) map[r.titleSlug] = note;
+        }
+        setNoteMap(map);
+      })
+      .catch(() => {}); // notes are enrichment; table works without them
   }, []);
 
   return (
@@ -93,6 +106,7 @@ export function HistoryTable() {
                     <th className="pb-2 text-left font-medium">Runtime</th>
                     <th className="pb-2 text-left font-medium">Memory</th>
                     <th className="pb-2 text-left font-medium">Submitted</th>
+                    <th className="pb-2 text-left font-medium">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -122,6 +136,18 @@ export function HistoryTable() {
                           month: "short", day: "numeric", year: "numeric",
                           hour: "2-digit", minute: "2-digit",
                         })}
+                      </td>
+                      <td className="py-3">
+                        {noteMap[s.titleSlug] ? (
+                          <span
+                            title={noteMap[s.titleSlug]}
+                            className="block max-w-48 truncate text-xs text-muted-foreground"
+                          >
+                            {noteMap[s.titleSlug]}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}

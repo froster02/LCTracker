@@ -68,6 +68,38 @@ function collectAcceptedSubmissions(start, end, pageSize, pageDelayMs) {
       await new Promise((r) => setTimeout(r, pageDelayMs));
     }
 
+    // Batch-fetch the user's own LeetCode problem notes (20 slugs per
+    // aliased GraphQL request) so they can be shown next to submissions.
+    const noteMap = {};
+    const slugs = [...acceptedProblems.keys()];
+    for (let i = 0; i < slugs.length; i += 20) {
+      const chunk = slugs.slice(i, i + 20);
+      const query =
+        "query {" +
+        chunk
+          .map((s, j) => ` q${j}: question(titleSlug: ${JSON.stringify(s)}) { note }`)
+          .join("") +
+        " }";
+      try {
+        const resp = await fetch("https://leetcode.com/graphql/", {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ query }),
+        });
+        const json = await resp.json();
+        chunk.forEach((s, j) => {
+          const note = json?.data?.[`q${j}`]?.note;
+          if (typeof note === "string" && note.trim()) {
+            noteMap[s] = note.trim().slice(0, 2000);
+          }
+        });
+      } catch (e) {
+        // Notes are best-effort; keep syncing without them.
+      }
+      if (i + 20 < slugs.length) await new Promise((r) => setTimeout(r, pageDelayMs));
+    }
+
     const results = [];
     for (const [slug, sub] of acceptedProblems) {
       results.push({
@@ -80,6 +112,7 @@ function collectAcceptedSubmissions(start, end, pageSize, pageDelayMs) {
         // LeetCode's submission list includes the solution source; pass it
         // through so the server can commit it to the user's GitHub repo.
         ...(sub.code ? { code: String(sub.code).slice(0, 100000) } : {}),
+        ...(noteMap[slug] ? { lcNote: noteMap[slug] } : {}),
         url: `https://leetcode.com/problems/${slug}/`,
         submittedAt: new Date(sub.timestamp * 1000).toISOString(),
       });

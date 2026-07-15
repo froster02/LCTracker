@@ -26,6 +26,8 @@ export async function GET(request: Request) {
         stage: true,
         mastered: true,
         note: true,
+        lcNote: true,
+        owner: true,
         firstSolvedAt: true,
         lastSolvedAt: true,
         nextReviewAt: true,

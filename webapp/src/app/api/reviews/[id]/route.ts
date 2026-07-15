@@ -4,9 +4,14 @@ import { getUserIdFromRequest } from "@/lib/request-auth";
 import { rateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
-const patchSchema = z.object({
-  note: z.string().max(300),
-});
+const patchSchema = z
+  .object({
+    note: z.string().max(300).optional(),
+    owner: z.enum(["me", "friend"]).optional(),
+  })
+  .refine((d) => d.note !== undefined || d.owner !== undefined, {
+    message: "Provide note or owner",
+  });
 
 export async function PATCH(
   request: Request,
@@ -41,11 +46,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 
+    const data: { note?: string | null; owner?: string } = {};
+    if (parsed.data.note !== undefined) {
+      data.note = parsed.data.note === "" ? null : parsed.data.note;
+    }
+    if (parsed.data.owner !== undefined) {
+      data.owner = parsed.data.owner;
+    }
+
     const updatedReview = await prisma.problemReview.update({
       where: { id },
-      data: {
-        note: parsed.data.note === "" ? null : parsed.data.note,
-      },
+      data,
     });
 
     return NextResponse.json({ review: updatedReview });
